@@ -64,7 +64,7 @@ class AuthService {
             ]);
         }
     
-        $verificationUrl = url('/verify-email/' . $verificationToken);
+        $verificationUrl = url('api/auth/verify-email/' . $verificationToken);
         $emailBody = str_replace('{{url}}', $verificationUrl, $template->body);
         Mail::raw($emailBody, function ($message) use ($email, $template) {
             $message->to($email)
@@ -88,6 +88,9 @@ class AuthService {
                 'error' => 0
             ], 200);
         }
+
+        $record->status = 9;
+        $record->save();
 
         return response()->json([
             'message' => 'Email verified successfully. Please proceed to registration.',
@@ -161,19 +164,18 @@ class AuthService {
                 'error' => 1
             ], 200);
         }
-    
-        // Log the user in
-        Auth::login($user);
 
         // Generate JWT Token
-        $token = $user->createToken('SkinAndSpoon')->accessToken;
+        $accessToken = $user->createToken('SkinAndSpoon')->accessToken;
+        $refreshToken = $user->createToken('SkinAndSpoon')->refreshToken;
 
         return response()->json([
             'message' => 'Login successful',
             'error' => 0,
             'data' => [
                 'user' => $user,
-                'token' => $token->token,
+                'access_token' => $accessToken->token,
+                'refresh_token' => $refreshToken->token,
             ]
         ]);
     }
