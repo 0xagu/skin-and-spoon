@@ -4,8 +4,11 @@ import * as Yup from 'yup';
 import Header from "../../../components/Header";
 import api from "../../../../api/axios"
 import { encryptAES } from '../../../../store/constant';
+import { Grid2, FormControl, Card, CardHeader, CardContent, TextField, Button } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 const Login = () => {
-
+    const { t } = useTranslation();
+    
     const initialValues = {
         email: '',
         password: '',
@@ -16,7 +19,7 @@ const Login = () => {
         password: Yup.string().required('Password is required'),
     });
 
-    const handleSubmit = async (values) => {
+    const handleLogin = async (values) => {
         try {
             const response = await api.post('/auth/login', values);
 
@@ -45,30 +48,75 @@ const Login = () => {
         <>
             <Header />
             <h2>Login</h2>
-            <Formik
-              initialValues={initialValues}
-              validationSchema={validationSchema}
-              onSubmit={handleSubmit}
+            <Grid2 
+            container
+            sx={{ 
+              maxWidth: 400, 
+              m: '0 auto',
+              p: 5,
+              backgroundColor: 'red'
+            }}
             >
-            {({ isSubmitting, errors }) => (
-              <Form>
-                <div>
-                  <label>Email:</label>
-                  <Field type="email" name="email" />
-                  <ErrorMessage name="email" component="div" style={{ color: 'red' }} />
-                </div>
-                <div>
-                  <label>Password:</label>
-                  <Field type="password" name="password" />
-                  <ErrorMessage name="password" component="div" style={{ color: 'red' }} />
-                </div>
-                {errors.general && <div style={{ color: 'red' }}>{errors.general}</div>}
-                <button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Logging in...' : 'Login'}
-                </button>
-              </Form>
-            )}
-          </Formik>
+              <Grid2 item p={5}>
+                <Card>
+                  <CardHeader title="REGISTER FORM"></CardHeader>
+                  <Formik
+                    initialValues={initialValues}
+                    validationSchema={validationSchema}
+                    onSubmit={(values) => {
+                      console.log("Form submitted with values:", values);
+                      handleLogin(values);
+                  }}
+                  >
+                    {({ isSubmitting, errors, touched }) => (
+                      <Form>
+                        <CardContent>
+                          <Grid2 item container spacing={1} justify="center">
+                            <FormControl>
+                              <Field name="email">
+                                {({ field }) => (
+                                  <TextField
+                                    {...field}
+                                    label="Email Address"
+                                    variant="outlined"
+                                    error={touched.email && Boolean(errors.email)}
+                                    helperText={touched.email && errors.email}
+                                    fullWidth
+                                  />
+                                )}
+                              </Field>
+                            </FormControl>
+                          </Grid2>
+
+                          <Grid2 item container spacing={1} justify="center">
+                            <FormControl>
+                              <Field name="password">
+                                {({ field }) => (
+                                  <TextField
+                                    {...field}
+                                    label="Password"
+                                    variant="outlined"
+                                    error={touched.password && Boolean(errors.password)}
+                                    helperText={touched.password && errors.password}
+                                    fullWidth
+                                  />
+                                )}
+                              </Field>
+                            </FormControl>
+                          </Grid2>
+
+                          <Grid2 item container spacing={1} justifyContent="center" >
+                            <Button variant="contained" color="primary" type="submit" disabled={isSubmitting}>
+                              Login
+                            </Button>
+                          </Grid2>
+                        </CardContent>
+                      </Form>
+                    )}
+                  </Formik>
+                </Card>
+              </Grid2>
+          </Grid2>
         </>
     );
 };
