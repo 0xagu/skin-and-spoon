@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
-import Login from './views/pages/authentication/login';
+import Home from './views/pages/home';
 import { ThemeProvider, createTheme } from '@mui/material';
 function App() {
 
@@ -22,7 +22,7 @@ function App() {
       <div>
         <BrowserRouter>
           <Routes>
-            <Route index element={<Login />}/>
+            <Route index element={<Home />}/>
           </Routes>
         </BrowserRouter>
       </div>

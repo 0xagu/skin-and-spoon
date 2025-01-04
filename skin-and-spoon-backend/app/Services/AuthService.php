@@ -23,11 +23,20 @@ class AuthService {
         if ($user) {
             return response()->json([
                 'message' => 'Proceed to login',
+                'action' => 'login',
+                'data' => $email,
                 'error' => 0
             ]);
         } else {
             $verificationToken = \Str::random(40);
             self::sendVerificationEmail($email, $verificationToken);
+
+            return response()->json([
+                'message' => 'Verification email sent.',
+                'action' => 'verifyEmail',
+                'data' => $email,
+                'error' => 0
+            ]);
         }
 
     }
@@ -43,6 +52,7 @@ class AuthService {
             $verificationToken = \Str::random(40);
             $existingRecord->update([
                 'token' => $verificationToken,
+                'status' => 1,
                 'expires_at' => now()->addMinutes(30),
             ]);
         } else {
@@ -78,6 +88,7 @@ class AuthService {
         if (!$record) {
             return response()->json([
                 'message' => 'Invalid token.',
+                'action' => 'reVerifyEmail',
                 'error' => 0
             ], 200);
         }
@@ -85,6 +96,7 @@ class AuthService {
         if ($record->status == 9) {
             return response()->json([
                 'message' => 'The verification token has expired.',
+                'action' => 'reVerifyEmail',
                 'error' => 0
             ], 200);
         }
@@ -95,7 +107,8 @@ class AuthService {
         return response()->json([
             'message' => 'Email verified successfully. Please proceed to registration.',
             'error' => 0,
-            'data' => ['email' => $record->email] 
+            'action' => 'registerAccount',
+            'data' => $record->email
         ]);
     }
     public static function register($request)
