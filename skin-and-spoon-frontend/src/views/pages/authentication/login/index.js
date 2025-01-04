@@ -1,13 +1,17 @@
-import React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import React, { useState } from 'react';
+import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import Header from "../../../components/Header";
 import api from "../../../../api/axios"
 import { encryptAES } from '../../../../store/constant';
-import { Grid2, FormControl, Card, CardHeader, CardContent, TextField, Button } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Grid2, TextField, Button, Container, Typography } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
 import { useTranslation } from 'react-i18next';
+import welcomeImage from '../../../../assets/images/welcome.jpeg';
+
 const Login = () => {
     const { t } = useTranslation();
+    const [open, setOpen] = useState(false);
     
     const initialValues = {
         email: '',
@@ -23,7 +27,7 @@ const Login = () => {
         try {
             const response = await api.post('/auth/login', values);
 
-            if (response?.data?.error == 0) {
+            if (response?.data?.error === 0) {
               const dataToStore = {
                 userInfo: {
                     name: response?.data?.chatSocialAccounts,
@@ -35,7 +39,7 @@ const Login = () => {
 
               localStorage.setItem('accessToken', encryptAES(dataToStore.accessToken));
               localStorage.setItem('refreshToken', encryptAES(dataToStore.refreshToken));
-
+              handleClose();
             }else {
               console.log("login failed,", response?.message);
             }
@@ -44,80 +48,157 @@ const Login = () => {
         }
     };
     
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
     return (
-        <>
-            <Header />
-            <h2>Login</h2>
-            <Grid2 
-            container
+      <Container>
+        <Header />
+        <h2>Login Dialog Example</h2>
+        <Button variant="contained" color="primary" onClick={handleOpen}>
+            Sign In
+        </Button>
+        <Dialog 
+          open={open} 
+          onClose={handleClose} 
+          maxWidth="md" 
+          fullWidth
+        >
+          <DialogContent 
             sx={{ 
-              maxWidth: 400, 
-              m: '0 auto',
-              p: 5,
-              backgroundColor: 'red'
+              p: 0,
+              overflow: 'hidden'
             }}
-            >
-              <Grid2 item p={5}>
-                <Card>
-                  <CardHeader title="REGISTER FORM"></CardHeader>
-                  <Formik
-                    initialValues={initialValues}
-                    validationSchema={validationSchema}
-                    onSubmit={(values) => {
+          >
+            <Grid2 container>
+              <Grid2 
+                item 
+                size={{ xs: 12, sm: 6 }}
+                sx={{
+                  display: { xs: 'none', sm: 'flex' }
+                }}
+              >
+                <img
+                  src={welcomeImage}
+                  alt="Welcome"
+                  style={{ 
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                }}
+                />
+              </Grid2>
+
+              <Grid2 
+                item 
+                size={{ xs: 12, sm: 6 }}
+                sx={{
+                  flexGrow: 1,
+                  px: 6,
+                  py: 6
+                }}
+              >
+                <Typography
+                sx={{
+                  display: { xs: 'flex', sm: 'none' }
+                }}>
+                  Welcome to Skin & Spoon!
+                </Typography>
+                <DialogTitle 
+                  sx={{
+                    px: 0,
+                    py: { xs: 3, sm: 6 },
+                    fontWeight: '800'
+                  }}
+                >
+                  Log in
+                </DialogTitle>
+                <Formik
+                  initialValues={initialValues}
+                  validationSchema={validationSchema}
+                  onSubmit={(values) => {
                       console.log("Form submitted with values:", values);
                       handleLogin(values);
                   }}
-                  >
-                    {({ isSubmitting, errors, touched }) => (
-                      <Form>
-                        <CardContent>
-                          <Grid2 item container spacing={1} justify="center">
-                            <FormControl>
-                              <Field name="email">
-                                {({ field }) => (
-                                  <TextField
-                                    {...field}
-                                    label="Email Address"
-                                    variant="outlined"
-                                    error={touched.email && Boolean(errors.email)}
-                                    helperText={touched.email && errors.email}
-                                    fullWidth
-                                  />
-                                )}
-                              </Field>
-                            </FormControl>
+                >
+                  {({ isSubmitting, errors, touched }) => (
+                    <Form>
+                      <Grid2 
+                        container
+                        spacing={2}
+                        sx={{ 
+                          maxHeight: 400
+                        }}>
+                          <Grid2 
+                            item 
+                            xs={12}
+                            size={12}
+                            sx={{
+                              pb: { xs: 0, sm: 4, md: 1 }
+                            }}
+                          >
+                            <Field name="email">
+                              {({ field }) => (
+                                <TextField
+                                  {...field}
+                                  label="Email Address"
+                                  variant="standard"
+                                  error={touched.email && Boolean(errors.email)}
+                                  helperText={touched.email ? errors.email : ' '}
+                                  fullWidth
+                                />
+                              )}
+                            </Field>
                           </Grid2>
 
-                          <Grid2 item container spacing={1} justify="center">
-                            <FormControl>
-                              <Field name="password">
-                                {({ field }) => (
-                                  <TextField
+                          <Grid2 
+                            item 
+                            xs={12}
+                            size={12}
+                            sx={{
+                              pb: { xs: 1, sm: 5 }
+                            }}
+                            >
+                            <Field name="password">
+                              {({ field }) => (
+                                <TextField
                                     {...field}
                                     label="Password"
-                                    variant="outlined"
+                                    type="password"
+                                    variant="standard"
                                     error={touched.password && Boolean(errors.password)}
-                                    helperText={touched.password && errors.password}
+                                    helperText={touched.password ? errors.password : ' '}
                                     fullWidth
-                                  />
-                                )}
-                              </Field>
-                            </FormControl>
+                                />
+                              )}
+                            </Field>
                           </Grid2>
+                        </Grid2>
 
-                          <Grid2 item container spacing={1} justifyContent="center" >
-                            <Button variant="contained" color="primary" type="submit" disabled={isSubmitting}>
-                              Login
-                            </Button>
-                          </Grid2>
-                        </CardContent>
-                      </Form>
-                    )}
-                  </Formik>
-                </Card>
+                        <DialogActions
+                        sx={{
+                          px: 0
+                        }}>
+                          <LoadingButton
+                            type="submit"
+                            size='large'
+                            variant="contained"
+                            color="primary"
+                            loading={isSubmitting}
+                            disabled={isSubmitting}
+                            fullWidth
+                            disableElevation
+                          >
+                            Login
+                          </LoadingButton>
+                        </DialogActions>
+                    </Form>
+                  )}
+                </Formik>
               </Grid2>
-          </Grid2>
-        </>
+            </Grid2>
+          </DialogContent>
+        </Dialog>
+      </Container>
     );
 };
 export default Login;
