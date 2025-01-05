@@ -2,14 +2,10 @@ import React, { useState } from 'react';
 import Header from "../../components/Header";
 import { Button, Container } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import VerifyLoginRegister from '../../components/verifyLoginRegister';
 
 const Home = () => {
     const { t } = useTranslation();
-    const [open, setOpen] = useState(false);
-    
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+   
     return (
       <Container>
         <Header />
@@ -17,8 +13,6 @@ const Home = () => {
         <Button variant="contained" color="primary" onClick={handleOpen}>
             Log In
         </Button>
-        
-        <VerifyLoginRegister open={open} handleClose={handleClose} />
       </Container>
     );
 };

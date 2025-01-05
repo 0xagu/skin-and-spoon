@@ -1,34 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../../../../api/axios';
+import { TextField, Container, Grid2, Typography } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import api from "../../../../api/axios"
-import { Dialog, DialogTitle, DialogContent, DialogActions, Grid2, TextField, Typography } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useTranslation } from 'react-i18next';
 import welcomeImage from '../../../../assets/images/welcome.jpeg';
+import { useQuery } from '@tanstack/react-query';
 
-const VerifyEmail = ({ open, handleClose }) => {
-    const { t } = useTranslation();
+const VerifyEmail = () => {
+    const { token } = useParams();
+    const [message, setMessage] = useState('');
     const [action, setAction] = useState('');
-   
-    useEffect(() => {
-      if(!open){
-        setAction('');
-      }
-    }, [open])
+    const navigate = useNavigate();
 
-    const initialValues = {
-        email: '',
-        password: ''
-      };
-    
-    const validationSchema = Yup.object({
-        email: Yup.string().email('Invalid email address').required('Email is required'),
+    const { data: verifyResult } = useQuery({
+        staleTime: Infinity,
+        cacheTime: Infinity,
+        queryKey: ['verifyResult'],
+        queryFn: async () =>
+          await api
+            .get(`/auth/verify-email/${token}`)
+            .then((res) => res.data)
     });
 
-    const handleLogin = async (values, { setSubmitting }) => {
+    useEffect(() => {
+        if (!verifyResult) return;
+    
+        const { error, action } = verifyResult;
+    
+        if (error === 0) {
+            setMessage('Verification successful!');
+        } else {
+            setMessage('Please re-enter a valid email.');
+        }
+    
+        setAction(action);
+    }, [verifyResult]);
+
+    console.log("verifyResult?.data:", verifyResult?.data);
+    const initialValues = {
+        email: verifyResult?.data || '',
+        password: '',
+        password_confirmation: '',
+        name: ''
+    };
+
+    const validationSchema = Yup.object({
+        email: Yup.string().email('Invalid email address').required('Email is required'),
+        // password: Yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
+        // confirmPassword: Yup.string()
+        //     .oneOf([Yup.ref('password'), null], 'Passwords must match')
+        //     .required('Confirm password is required')
+    });
+    
+    const handleVerifyEmail = async (values, { setSubmitting }) => {
         try {
-            const endpoint = action === 'login' ? '/auth/login' : '/auth/welcome'; 
+            const endpoint = action === 'register' ? '/auth/register' : '/auth/welcome'; 
             const response = await api.post(endpoint, values);
 
             console.log("response:", response);
@@ -49,165 +77,220 @@ const VerifyEmail = ({ open, handleClose }) => {
         }
     };
     return (
-      <Dialog 
-        open={open} 
-        onClose={handleClose} 
-        maxWidth="md" 
-        fullWidth
-      >
-        <DialogContent 
-          sx={{ 
-            p: 0,
-            overflow: 'hidden'
-          }}
+        <Container
+            maxWidth="false"
+            disableGutters
         >
-          <Grid2 container>
             <Grid2 
-              item 
-              size={{ xs: 12, sm: 6 }}
-              sx={{
-                display: { xs: 'none', sm: 'flex' }
-              }}
-            >
-              <img
-                src={welcomeImage}
-                alt="Welcome"
-                style={{ 
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-              }}
-              />
-            </Grid2>
-
-            <Grid2 
-              item 
-              size={{ xs: 12, sm: 6 }}
-              sx={{
-                flexGrow: 1,
-                px: 6,
-                py: 6
-              }}
-            >
-              <Typography
-              sx={{
-                display: { xs: 'flex', sm: 'none' }
-              }}>
-                Welcome to Skin & Spoon!
-              </Typography>
-              <DialogTitle 
+                container 
+                spacing={0}
                 sx={{
-                  px: 0,
-                  py: { xs: 3, sm: 6 },
-                  fontWeight: '800'
+                    px: 0
                 }}
-              >
-                Log in (VerifyEmail)
-              </DialogTitle>
-              <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={(values, { setSubmitting }) => {
-                    console.log("Form submitted with values:", values);
-                    handleLogin(values, { setSubmitting });
-                }}
-                // validateOnChange={false}
-                // validateOnBlur={false}
-                // context={{ isEmailVerified }}
-              >
-                {({ isSubmitting, errors, touched }) => (
-                  <Form>
-                    <Grid2 
-                      container
-                      spacing={2}
-                      sx={{ 
-                        maxHeight: 400
-                      }}
-                    >
-                      <Grid2 
-                        item 
-                        xs={12}
-                        size={12}
-                        sx={{
-                          pb: { xs: 0, sm: 4, md: 1 }
-                        }}
-                      >
-                        <Field name="email">
-                          {({ field }) => (
-                            <TextField
-                              {...field}
-                              label="Email Address"
-                              variant="standard"
-                              error={touched.email && Boolean(errors.email)}
-                              helperText={touched.email ? errors.email : ' '}
-                              disabled={action !== ''}
-                              fullWidth
-                            />
-                          )}
-                        </Field> 
-
-                        {action === 'verifyEmail' && (
-                          <Typography
-                            variant="body2"
-                            color="textSecondary"
-                            sx={{ mt: 2 }}
-                          >
-                            Verification email sent! Please check your inbox. :)
-                          </Typography>
+            >
+                <Grid2 
+                    item 
+                    size={6}
+                    sx={{
+                        display: 'flex',
+                        flexGrow: 1,
+                        height: '100vh',
+                    }}
+                >
+                    <img 
+                        src={welcomeImage} 
+                        alt="Verify Email" 
+                        style={{ 
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: 'center',
+                         }} 
+                    />
+                </Grid2>
+                <Grid2 
+                    item 
+                    size={6}
+                    px={12}
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flexGrow: 1,
+                        height: '100vh',
+                        justifyContent: 'center',
+                        padding: '5rem'
+                    }}
+                >
+                    <Grid2 item>
+                        {action === 'register' ? (
+                            <>
+                                <h1>Email Verified!</h1>
+                                <h1>Register An Account</h1>
+                            </>
+                        ) : (
+                            <>
+                                <h1>Invalid or expired token.</h1>
+                                <p>{message}</p>
+                            </>
                         )}
-                      </Grid2>
                     </Grid2>
+                    <Grid2 item>
+                        <Formik
+                            initialValues={initialValues}
+                            validationSchema={validationSchema}
+                            onSubmit={(values, { setSubmitting }) => {
+                                console.log("Form submitted with values:", values);
+                                handleVerifyEmail(values, { setSubmitting });
+                            }}
+                            enableReinitialize={true}
+                            // validateOnChange={false}
+                            // validateOnBlur={false}
+                            // context={{ isEmailVerified }}
+                        >
+                            {({ isSubmitting, errors, touched }) => (
+                                <Form>
+                                    <Grid2 
+                                        container
+                                        spacing={2}
+                                        sx={{ 
+                                            maxHeight: 400
+                                        }}
+                                    >
+                                        <Grid2 
+                                            item 
+                                            xs={6}
+                                            size={6}
+                                            sx={{
+                                            pb: { xs: 0, sm: 4, md: 1 }
+                                            }}
+                                        >
+                                            <Field name="email">
+                                                {({ field }) => (
+                                                    <TextField
+                                                    {...field}
+                                                    label="Email Address"
+                                                    variant="standard"
+                                                    error={touched.email && Boolean(errors.email)}
+                                                    helperText={touched.email ? errors.email : ' '}
+                                                    fullWidth
+                                                    disabled={action === 'register'}
+                                                    />
+                                                )}
+                                            </Field> 
 
-                    {action === 'login' && (
-                      <Grid2 
-                        item 
-                        xs={12}
-                        size={12}
-                        sx={{
-                          pb: { xs: 1, sm: 5 }
-                        }}
-                      >
-                        <Field name="password">
-                          {({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Password"
-                                type="password"
-                                variant="standard"
-                                error={touched.password && Boolean(errors.password)}
-                                helperText={touched.password ? errors.password : ' '}
-                                fullWidth
-                            />
-                          )}
-                        </Field>
-                      </Grid2>
-                    )}
+                                            {action === 'verifyEmail' && (
+                                                <Typography
+                                                    variant="body2"
+                                                    color="textSecondary"
+                                                    sx={{ mt: 2 }}
+                                                >
+                                                    Verification email sent! Please check your inbox. :)
+                                                </Typography>
+                                            )}
+                                        </Grid2>
+                                    </Grid2>
 
-                    <DialogActions
-                      sx={{
-                        px: 0
-                      }}
-                    >
-                      <LoadingButton
-                        type="submit"
-                        size='large'
-                        variant="contained"
-                        color="primary"
-                        loading={isSubmitting}
-                        disabled={isSubmitting || action === 'verifyEmail'}
-                        fullWidth
-                        disableElevation
-                      >
-                        Login
-                      </LoadingButton>
-                    </DialogActions>
-                  </Form>
-                )}
-              </Formik>
+                                    {action === 'register' && (
+                                        <>
+                                            <Grid2 
+                                                item 
+                                                xs={6}
+                                                size={6}
+                                                sx={{
+                                                    pb: { xs: 0, sm: 4, md: 1 }
+                                                }}
+                                            >
+                                                <Field name="name">
+                                                    {({ field }) => (
+                                                        <TextField
+                                                            {...field}
+                                                            label="name"
+                                                            type="text"
+                                                            variant="standard"
+                                                            error={touched.name && Boolean(errors.name)}
+                                                            helperText={touched.name ? errors.name : ' '}
+                                                            fullWidth
+                                                        />
+                                                    )}
+                                                </Field>
+                                            </Grid2>
+                                            <Grid2 
+                                                item 
+                                                xs={6}
+                                                size={6}
+                                                sx={{
+                                                    pb: { xs: 0, sm: 4, md: 1 }
+                                                }}
+                                            >
+                                                <Field name="password">
+                                                    {({ field }) => (
+                                                        <TextField
+                                                            {...field}
+                                                            label="Password"
+                                                            type="password"
+                                                            variant="standard"
+                                                            error={touched.password && Boolean(errors.password)}
+                                                            helperText={touched.password ? errors.password : ' '}
+                                                            fullWidth
+                                                        />
+                                                    )}
+                                                </Field>
+                                            </Grid2>
+
+                                            <Grid2 
+                                                item 
+                                                xs={6}
+                                                size={6}
+                                                sx={{
+                                                    pb: { xs: 0, sm: 4, md: 1 }
+                                                }}
+                                            >
+                                                <Field name="password_confirmation">
+                                                    {({ field }) => (
+                                                        <TextField
+                                                            {...field}
+                                                            label="Confirm Password"
+                                                            type="password"
+                                                            variant="standard"
+                                                            error={touched.confirmPassword && Boolean(errors.confirmPassword)}
+                                                            helperText={touched.confirmPassword ? errors.confirmPassword : ' '}
+                                                            fullWidth
+                                                        />
+                                                    )}
+                                                </Field>
+                                            </Grid2>
+                                        </>
+                                    )}
+
+                                    <Grid2 
+                                        item 
+                                        xs={6}
+                                        size={6}
+                                        sx={{
+                                            pb: { xs: 0, sm: 4, md: 1 }
+                                        }}
+                                    >
+                                        <LoadingButton
+                                            type="submit"
+                                            size='large'
+                                            variant="contained"
+                                            color="primary"
+                                            loading={isSubmitting}
+                                            disabled={isSubmitting}
+                                            fullWidth
+                                            disableElevation
+                                        >
+                                            {action === 'register' ? 'Register' : 'Verify Email'}
+                                        </LoadingButton>
+                                    </Grid2>
+                                </Form>
+                            )}
+                        </Formik>
+                    </Grid2>
+                </Grid2>
             </Grid2>
-          </Grid2>
-        </DialogContent>
-      </Dialog>
+        </Container>
     );
 };
+
 export default VerifyEmail;
