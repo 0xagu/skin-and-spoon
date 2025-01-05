@@ -46,7 +46,9 @@ class AuthService {
             $verificationToken = \Str::random(40);
         }
 
-        $existingRecord = MailVerification::where('email', $email)->first();
+        $existingRecord = MailVerification::where('email', $email)
+                            ->where('is_verified', 0)
+                            ->first();
 
         if ($existingRecord) {
             $verificationToken = \Str::random(40);
@@ -74,7 +76,7 @@ class AuthService {
             ]);
         }
     
-        $verificationUrl = url('api/auth/verify-email/' . $verificationToken);
+        $verificationUrl = config('app.frontend_url') . '/verify-email/' . $verificationToken;
         $emailBody = str_replace('{{url}}', $verificationUrl, $template->body);
         Mail::raw($emailBody, function ($message) use ($email, $template) {
             $message->to($email)
@@ -88,26 +90,28 @@ class AuthService {
         if (!$record) {
             return response()->json([
                 'message' => 'Invalid token.',
-                'action' => 'reVerifyEmail',
-                'error' => 0
+                'action' => 'reverifyEmail',
+                'error' => 1
             ], 200);
         }
 
         if ($record->status == 9) {
             return response()->json([
                 'message' => 'The verification token has expired.',
-                'action' => 'reVerifyEmail',
-                'error' => 0
+                'action' => 'reverifyEmail',
+                'error' => 1
             ], 200);
         }
 
         $record->status = 9;
+        $record->is_verified = 1;
+        $record->email_verified_at = now();
         $record->save();
 
         return response()->json([
             'message' => 'Email verified successfully. Please proceed to registration.',
             'error' => 0,
-            'action' => 'registerAccount',
+            'action' => 'register',
             'data' => $record->email
         ]);
     }
@@ -127,21 +131,32 @@ class AuthService {
             ], 400);
         }
 
+        $existingUser = User::where('email', $request->input('email'))->first();
+
+        if ($existingUser) {
+            return response()->json([
+                'message' => 'Email already in use.',
+                'error' => 1,
+                'action' => 'login',
+                'data' => $request->input('email')
+            ], 400);
+        }
+
         $verification = MailVerification::where('email', $request->input('email'))
-                                         ->where('status', 1) 
-                                         ->first();
+                            ->where('is_verified', 1)
+                            ->first();
+        
         if (!$verification) {
             return response()->json([
                 'message' => 'Email not verified or invalid.',
-                'error' => 1
+                'error' => 1,
+                'action' => 'reverifyEmail'
             ], 400);
         }
 
         User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'email_verified_at' => $verification->updated_at,
-            'verification_token' => $verification->token,
             'is_verified' => 1,
             'password' => Hash::make($request->input('password')), // BCrypt hashing
         ]);
@@ -151,7 +166,9 @@ class AuthService {
 
         return response()->json([
             'message' => 'Registration successful.',
-            'error' => 0
+            'error' => 0,
+            'action' => 'login',
+            'data' => $request->input('email')
         ]);
     }
     public static function login($request)
@@ -174,12 +191,16 @@ class AuthService {
         if (!$user || !Hash::check($request->input('password'), $user->password)) {
             return response()->json([
                 'message' => 'Invalid email or password.',
-                'error' => 1
+                'error' => 1,
+                'data' => $request->input('email'),
+                'action' => 'resetPassword'
             ], 200);
         }
 
         // Generate JWT Token
         $accessToken = $user->createToken('SkinAndSpoon')->accessToken;
+
+        //refresh token not working!
         $refreshToken = $user->createToken('SkinAndSpoon')->refreshToken;
 
         return response()->json([

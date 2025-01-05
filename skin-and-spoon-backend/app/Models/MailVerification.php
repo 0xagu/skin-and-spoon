@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Models\User;
+
 class MailVerification extends Model
 {
     use HasFactory;
@@ -13,6 +15,8 @@ class MailVerification extends Model
 
     protected $fillable = [
         'email',
+        'is_verified',
+        'email_verification_at',
         'token',
         'expires_at',
         'status'
@@ -23,4 +27,8 @@ class MailVerification extends Model
         'created_at',
         'updated_at',
     ];
+
+    public function user() {
+        return $this->belongsTo( User::class, 'email' );
+    }
 }
