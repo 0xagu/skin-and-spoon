@@ -1,6 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { useGLTF, Html, PresentationControls, ContactShadows, Environment } from "@react-three/drei";
-import { AmbientLight } from "three";
+import { useGLTF, PresentationControls, ContactShadows, Environment } from "@react-three/drei";
 
 const interactiveBackground = () => {
 
@@ -39,25 +38,18 @@ const interactiveBackground = () => {
                 zIndex: 0,
             }}
         >
-            <ambientLight intensity={0.5} />
-            <spotLight 
-                position={[10, 10, 10]}
-                angle={0.15}
-                penumbra={1}
-                shadow-mapSize={2048}
-                castShadow
-            />
+            <ambientLight intensity={0.1} />
             <PresentationControls
                 global
                 config={{ mass: 2, tension: 500 }}
                 snap={{ mass: 4, tension: 1500 }}
                 rotation={[0, -1, 0]}
-                polar={[-Math.PI / 3, Math.PI / 3]}
-                azimuth={[-Math.PI / 1.4, Math.PI / 2]}
+                polar={[-Math.PI / 10, 0]}
+                azimuth={[-Math.PI / 0.5, Math.PI / 0.5]}
             >
                 <ModelBg 
                     rotation={[-Math.PI / 2, 0, 0]} 
-                    position={[5, -1, 0]} 
+                    position={[4, -1, 0]} 
                     scale={0.006} 
                 />
             </PresentationControls>
@@ -65,10 +57,10 @@ const interactiveBackground = () => {
                 position={[0, -1.4, 0]} 
                 opacity={0.75} 
                 scale={10} 
-                blur={3} 
+                blur={4} 
                 far={4}
             />
-            <Environment preset="city" />
+            <Environment preset="apartment" />
         </Canvas>
     );
 };
