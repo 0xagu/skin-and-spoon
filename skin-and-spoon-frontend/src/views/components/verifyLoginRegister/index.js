@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import api from "../../../api/axios"
-import { Dialog, DialogTitle, DialogContent, DialogActions, Grid2, TextField, Typography } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Grid2, TextField, Typography, Link } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useTranslation } from 'react-i18next';
 import welcomeImage from '../../../assets/images/welcome.jpeg';
+import { useNavigate } from 'react-router-dom';
 
 const VerifyLoginRegister = ({ open, handleClose }) => {
     const { t } = useTranslation();
     const [action, setAction] = useState('');
-   
+    const navigate = useNavigate();
+
     useEffect(() => {
       if(!open){
         setAction('');
@@ -31,11 +33,15 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
             const endpoint = action === 'login' ? '/auth/login' : '/auth/welcome'; 
             const response = await api.post(endpoint, values);
 
-            console.log("response:", response);
             if (response?.data?.error === 0) {
               console.log("verify success!")
+
+              localStorage.setItem('access_token', response?.data?.data?.access_token); 
+              localStorage.setItem('refresh_token', response?.data?.data?.refresh_token); 
               if (response?.data?.action === 'login') {
                 setAction('login');
+              } else if (response?.data?.action === 'dashboard') {
+                navigate('/home');
               } else {
                 setAction('verifyEmail');
               }
@@ -102,7 +108,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                   fontWeight: '800'
                 }}
               >
-                Log in (VerifyEmail)
+                Sign Up (VerifyEmail)
               </DialogTitle>
               <Formik
                 initialValues={initialValues}
@@ -140,7 +146,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                               variant="standard"
                               error={touched.email && Boolean(errors.email)}
                               helperText={touched.email ? errors.email : ' '}
-                              disabled={action !== ''}
+                              // disabled={action !== ''}
                               fullWidth
                             />
                           )}
@@ -198,9 +204,22 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                         fullWidth
                         disableElevation
                       >
-                        Login
+                        {action === 'login' ? 'Login' : 'Register'}
                       </LoadingButton>
                     </DialogActions>
+                    <Grid2 sx={{ display: "flex", alignItems: "center" }}>
+                      <h6 style={{ margin: 0, marginRight: "8px" }}>Already have an account?</h6>
+                      <Link
+                        component="button"
+                        variant="body2"
+                        onClick={() => {
+                          setAction('login');
+                        }}
+                        style={{ textDecoration: "underline", cursor: "pointer" }}
+                      >
+                        Log in.
+                      </Link>
+                    </Grid2>
                   </Form>
                 )}
               </Formik>

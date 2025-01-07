@@ -25,5 +25,8 @@ class AuthServiceProvider extends ServiceProvider
             'view' => 'View user data',
             'edit' => 'Edit user data',
         ]);
+
+        Passport::tokensExpireIn(now()->addDays(1));
+        Passport::refreshTokensExpireIn(now()->addDays(30));
     }
 }

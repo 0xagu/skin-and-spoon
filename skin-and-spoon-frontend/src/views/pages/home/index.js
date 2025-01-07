@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from "../../components/Header";
 import { Container, Box, Toolbar, Grid2, Button, Stack } from '@mui/material';
 import InteractiveBackground from './Partials/3dInteractiveBackground';
 import { Suspense } from 'react';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-
+import VerifyLoginRegister from '../../components/VerifyLoginRegister';
 const Home = () => {
+    const [open, setOpen] = useState(false);
+          
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
     return (
       <Container maxWidth="false" disableGutters>
         <Header />
@@ -46,6 +50,8 @@ const Home = () => {
                 <Button 
                   variant="outlined" 
                   endIcon={<ArrowForwardIcon />}
+                  style={{ zIndex: 10 }}
+                  onClick={handleOpen}
                 >
                   Get Started
                 </Button>
@@ -56,7 +62,7 @@ const Home = () => {
               </Suspense>
           </Grid2>
         </Box>
-       
+        <VerifyLoginRegister open={open} handleClose={handleClose} />
       </Container>
     );
 };

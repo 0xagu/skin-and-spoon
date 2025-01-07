@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, AppBar, Toolbar, Typography, Box, Button, Switch } from '@mui/material';
 import AdbIcon from '@mui/icons-material/Adb';
 import CssBaseline from '@mui/material/CssBaseline';
-import VerifyLoginRegister from './verifyLoginRegister';
+import VerifyLoginRegister from './VerifyLoginRegister';
 
 const Header = () => {
     const pages = ['Login'];

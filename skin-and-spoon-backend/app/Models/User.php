@@ -54,4 +54,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo( MailVerification::class,'email' );
     }
+    
+    public function logAuth()
+    {
+        return $this->belongsTo( LogAuth::class,'user_id' );
+    }
 }

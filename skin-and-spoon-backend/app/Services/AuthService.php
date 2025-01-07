@@ -4,7 +4,8 @@ namespace App\Services;
 use App\Models\{
     User,
     MailTemplate,
-    MailVerification
+    MailVerification,
+    LogAuth
 };
 use Illuminate\Support\Facades\{
     Hash,
@@ -177,7 +178,7 @@ class AuthService {
             'email' => 'required|email|exists:users,email',
             'password' => 'required|string|min:8',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation error.',
@@ -185,33 +186,44 @@ class AuthService {
                 'error' => 1
             ], 200);
         }
-    
+
         $user = User::where('email', $request->input('email'))->first();
 
-        if (!$user || !Hash::check($request->input('password'), $user->password)) {
+        if ($user && Hash::check($request->input('password'), $user->password)) {
+            $accessToken = $user->createToken('SkinAndSpoon')->accessToken;
+
+            LogAuth::create([
+                'user_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'action' => 'login',
+                'status' => 1
+            ]);
+
             return response()->json([
-                'message' => 'Invalid email or password.',
-                'error' => 1,
-                'data' => $request->input('email'),
-                'action' => 'resetPassword'
-            ], 200);
+                'message' => 'Login successful',
+                'error' => 0,
+                'data' => [
+                    'user' => $user,
+                    'access_token' => $accessToken->token,
+                ],
+                'action' => 'dashboard'
+            ]);
         }
 
-        // Generate JWT Token
-        $accessToken = $user->createToken('SkinAndSpoon')->accessToken;
-
-        //refresh token not working!
-        $refreshToken = $user->createToken('SkinAndSpoon')->refreshToken;
+        LogAuth::create([
+            'user_id' => $user ? $user->id : null,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'action' => 'login',
+            'status' => 2
+        ]);
 
         return response()->json([
-            'message' => 'Login successful',
-            'error' => 0,
-            'data' => [
-                'user' => $user,
-                'access_token' => $accessToken->token,
-                'refresh_token' => $refreshToken->token,
-            ]
-        ]);
+            'message' => 'Invalid email or password.',
+            'action' => 'invalidCredentials',
+            'error' => 1,
+        ], 200);
     }
 }
 
