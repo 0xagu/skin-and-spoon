@@ -23,3 +23,6 @@ yarn-error.log
 /.zed
 .DS_Store
 .env.example
+/oauth-private.key
+/oauth-public.key
+

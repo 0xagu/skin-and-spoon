@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import api from '../../../../api/axios';
 import { TextField, Container, Grid2, Typography } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
@@ -12,7 +12,6 @@ const VerifyEmail = () => {
     const { token } = useParams();
     const [message, setMessage] = useState('');
     const [action, setAction] = useState('');
-    const navigate = useNavigate();
 
     const { data: verifyResult } = useQuery({
         staleTime: Infinity,

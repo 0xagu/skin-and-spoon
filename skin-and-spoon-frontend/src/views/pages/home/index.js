@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Header from "../../components/Header";
-import { Container, Box, Toolbar, Grid2, Button, Stack } from '@mui/material';
+import { Container, Box, Grid2, Button, Stack } from '@mui/material';
 import InteractiveBackground from './Partials/3dInteractiveBackground';
 import { Suspense } from 'react';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -14,7 +14,6 @@ const Home = () => {
       <Container maxWidth="false" disableGutters>
         <Header />
         <Box component="main" >
-          {/* <Toolbar/> */}
           <Grid2 
             container
             disableGutters

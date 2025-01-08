@@ -4,12 +4,10 @@ import * as Yup from 'yup';
 import api from "../../../api/axios"
 import { Dialog, DialogTitle, DialogContent, DialogActions, Grid2, TextField, Typography, Link } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useTranslation } from 'react-i18next';
 import welcomeImage from '../../../assets/images/welcome.jpeg';
 import { useNavigate } from 'react-router-dom';
 
 const VerifyLoginRegister = ({ open, handleClose }) => {
-    const { t } = useTranslation();
     const [action, setAction] = useState('');
     const navigate = useNavigate();
 
