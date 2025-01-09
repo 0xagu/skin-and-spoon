@@ -1,78 +1,35 @@
 import React, { useState } from 'react';
-import { Container, AppBar, Toolbar, Typography, Box, Button, Switch } from '@mui/material';
-import AdbIcon from '@mui/icons-material/Adb';
+import { AppBar, Toolbar, Typography, Box, Button, IconButton } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import VerifyLoginRegister from './VerifyLoginRegister';
 
-const Header = () => {
-    const pages = ['Login'];
-    const [darkMode, setDarkMode] = useState(false);
+const Header = ({ handleDrawerToggle }) => {
     const [open, setOpen] = useState(false);
-        
+       
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
-
-    const handleDarkModeToggle = () => {
-        setDarkMode(!darkMode);
-    };
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box>
             <CssBaseline />
-            <AppBar component="nav" position='sticky'>
-                <Container maxWidth="xl" >
-                    <Toolbar disableGutters>
-                        <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
-                        <Typography
-                            variant="h6"
-                            noWrap
-                            component="a"
-                            href="#app-bar-with-responsive-menu"
-                            sx={{
-                                mr: 2,
-                                display: { xs: 'none', md: 'flex', flexGrow: 1 },
-                                fontFamily: 'monospace',
-                                fontWeight: 700,
-                                letterSpacing: '.3rem',
-                                color: 'inherit',
-                                textDecoration: 'none',
-                            }}
-                        >
-                            Spoon & Skin
-                        </Typography>
-
-                        <Box 
-                            sx={{ 
-                                flexGrow: 1,
-                                ml: 'auto',
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Box sx={{ mr: 2 }}>
-                                <Switch
-                                    checked={darkMode}
-                                    onChange={handleDarkModeToggle}
-                                    name="darkMode"
-                                    color="default"
-                                />
-                            </Box>
-                                
-                            {pages.map((page) => (
-                                <Button
-                                    key={page}
-                                    onClick={handleOpen}
-                                    sx={{ my: 2, color: 'white', display: 'block' }}
-                                >
-                                    {page}
-                                </Button>
-                            ))}
-                        </Box>
-                    </Toolbar>
-
-                    <VerifyLoginRegister open={open} handleClose={handleClose} />
-                </Container>
+            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                <IconButton
+                    color="inherit"
+                    edge="start"
+                    onClick={handleDrawerToggle}
+                    sx={{ display: { sm: 'none' }, mr: 2 }}
+                >
+                    Open
+                </IconButton>
+                <Typography variant="h6" noWrap component="div">
+                    My App
+                </Typography>
+                <Box sx={{ marginLeft: 'auto' }} onClick={handleOpen}>
+                    <Button color="inherit">Login</Button>
+                </Box>
+                </Toolbar>
             </AppBar>
+            <VerifyLoginRegister open={open} handleClose={handleClose} />
         </Box>
     );
 };

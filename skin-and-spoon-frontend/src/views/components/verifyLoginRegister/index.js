@@ -28,7 +28,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
 
     const handleLogin = async (values, { setSubmitting }) => {
         try {
-            const endpoint = action === 'login' ? '/auth/login' : '/auth/welcome'; 
+            const endpoint = action === 'login' ? '/oauth/login' : '/auth/welcome'; 
             const response = await api.post(endpoint, values);
 
             if (response?.data?.error === 0) {
@@ -39,7 +39,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
               if (response?.data?.action === 'login') {
                 setAction('login');
               } else if (response?.data?.action === 'dashboard') {
-                navigate('/home');
+                navigate('/dashboard');
               } else {
                 setAction('verifyEmail');
               }

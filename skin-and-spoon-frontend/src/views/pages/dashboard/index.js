@@ -1,27 +1,67 @@
 import React, { useState } from 'react';
-import Header from "../../components/Header";
-import { Box, Container, Toolbar, Button } from '@mui/material';
-
+import {
+  Box,
+  Toolbar,
+  Typography,
+  Tabs,
+  Tab
+} from '@mui/material';
+import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
-const Dashboard = () => {
-    const [open, setOpen] = useState(false);
+import Footer from '../../components/Footer';
+import CardByWeek from './Partials/CardByWeek';
 
-    const toggleDrawer = (newOpen) => () => {
-      setOpen(newOpen);
-    };
+function Dashboard() {
+  const drawerWidth = 240;
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
-    return (
-      <Container maxWidth="false" disableGutters>
-        {/* <Header /> */}
-        <Toolbar/>
-        
-        <Box className="body">
-          <h1>Dashboard</h1>
-          <Button onClick={toggleDrawer(true)}>Open drawer</Button>
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+  return (
+    <Box sx={{ display: 'flex' }}>
+      <Header handleDrawerToggle={handleDrawerToggle}/>
+
+      {/* MAIN CONTENT */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          marginLeft: { sm: `${drawerWidth}px` },
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          marginTop: '64px',
+        }}
+      >
+        <Toolbar />
+        <Typography variant="h4">Welcome to My App</Typography>
+        <Typography>
+          This is the content area. Add your page content here.
+        </Typography>
+
+        {/* Tabs Section */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 4 }}>
+          <Tabs value={activeTab} onChange={handleTabChange}>
+            <Tab label="Week 1" />
+            <Tab label="Week 2" />
+          </Tabs>
         </Box>
 
-        <Sidebar open={open} toggleDrawer={toggleDrawer} />
-      </Container>
-    );
-};
+        {/* Render the content of the active tab */}
+        <Box sx={{ mt: 3 }}>
+          <CardByWeek activeTab={activeTab} />
+        </Box>
+      </Box>
+
+      <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle}/>
+      <Footer />
+    </Box>
+  );
+}
+
 export default Dashboard;

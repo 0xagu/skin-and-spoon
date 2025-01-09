@@ -1,20 +1,27 @@
 import React from 'react';
-// import { Link } from 'react-router-dom';
-import { Drawer, Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from '@mui/material';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
+import { Box, Drawer, List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Toolbar,
+  useMediaQuery } from '@mui/material';
+  import { Inbox as InboxIcon, Mail as MailIcon } from '@mui/icons-material';
 
-function Sidebar({ open, toggleDrawer }) {
-
-  const DrawerList = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
+function Sidebar({ mobileOpen, handleDrawerToggle}) {
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const drawerWidth = 240;
+  
+  const drawer = (
+    <Box sx={{ width: drawerWidth }} role="presentation">
+      <Toolbar />
+      <Divider />
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+        {['All', 'Starred', 'Expired', 'Shopping List', 'Analytic'].map((text, index) => (
           <ListItem key={text} disablePadding>
             <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
             </ListItemButton>
           </ListItem>
@@ -22,12 +29,10 @@ function Sidebar({ open, toggleDrawer }) {
       </List>
       <Divider />
       <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
+        {['Help', 'Logout'].map((text, index) => (
           <ListItem key={text} disablePadding>
             <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
             </ListItemButton>
           </ListItem>
@@ -37,11 +42,30 @@ function Sidebar({ open, toggleDrawer }) {
   );
 
   return (
-    <div className="sidebar">
-      <Drawer open={open} onClose={toggleDrawer(false)}>
-        {DrawerList}
+    <Box >
+      <Drawer
+        variant={isMobile ? 'temporary' : 'permanent'}
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }} // Better open performance on mobile.
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+        }}
+      >
+        {drawer}
       </Drawer>
-    </div>
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
   );
 }
 
