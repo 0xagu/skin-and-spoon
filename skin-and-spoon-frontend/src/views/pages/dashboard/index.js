@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Toolbar,
-  Typography,
   Tabs,
   Tab
 } from '@mui/material';
@@ -38,14 +36,8 @@ function Dashboard() {
           marginTop: '64px',
         }}
       >
-        <Toolbar />
-        <Typography variant="h4">Welcome to My App</Typography>
-        <Typography>
-          This is the content area. Add your page content here.
-        </Typography>
-
         {/* Tabs Section */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 4 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab label="Week 1" />
             <Tab label="Week 2" />
