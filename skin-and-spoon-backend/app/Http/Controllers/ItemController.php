@@ -10,4 +10,8 @@ class ItemController extends Controller
     {
         return ItemService::get($request);
     }
+    public function create(Request $request)
+    {
+        return ItemService::create($request);
+    }
 }

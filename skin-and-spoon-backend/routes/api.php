@@ -22,11 +22,21 @@ Route::group([
 });
 
 
+// Public route 
+Route::group([
+    'prefix' => 'list',
+], function () {
+    Route::post('create', [ItemController::class, 'create']);
+    Route::get('get', [ItemController::class, 'get']);
+});
+
+
 Route::middleware('auth:api')->group(function () {
     Route::group([
         'prefix' => 'list'
     ], function () {
-        Route::get('get', [ItemController::class, 'get']);
+        // Route::get('get', [ItemController::class, 'get']);
+        // Route::post('create', [ItemController::class, 'create']);
     }); 
 });
 ?>
