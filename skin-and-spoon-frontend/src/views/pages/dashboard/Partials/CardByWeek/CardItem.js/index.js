@@ -5,9 +5,15 @@ const CardItem = ({ category }) => {
   return (
     <Card sx={{ mb: 2 }}>
       <CardContent>
-        <Typography variant="h6">Card  for {category}</Typography>
+      <Typography variant="body2" color="textSecondary">
+          Logo: {category?.logo}
+        </Typography>
+        <Typography variant="h6">Name: {category?.name}</Typography>
         <Typography variant="body2" color="textSecondary">
-          This is some content for card.
+          Quantity: {category?.quantity}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          Expiry Date: {category?.expiration_date}
         </Typography>
       </CardContent>
     </Card>

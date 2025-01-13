@@ -19,9 +19,20 @@ class ItemService {
                     ->with('itemCategory')
                     ->get();
 
-        $groupItems = $items->groupBy('item_category_id');
-        
-        return $groupItems->toArray();
+        $groupedItems = $items->groupBy(function ($item) {
+            return $item->itemCategory->name;
+        });
+
+        $result = $groupedItems->map(function ($group, $categoryName) {
+            return [
+                'category_name' => $categoryName,
+                'items' => $group->map(function ($item) {
+                    return $item;
+                }),
+            ];
+        });
+                
+        return $result->values()->toArray();
     }
     public static function create($request)
     {

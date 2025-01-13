@@ -3,6 +3,7 @@ import { Backdrop, Fade, Modal, Box, Avatar, Grid2, TextField, Button } from '@m
 import * as Yup from 'yup';
 import { Formik, Form, Field } from 'formik';
 import LoadingButton from '@mui/lab/LoadingButton';
+import api from '../../../../../api/axios';
 
 const AddItemModal = ({ open, handleClose }) => {
     const style = {
@@ -22,16 +23,24 @@ const AddItemModal = ({ open, handleClose }) => {
     const initialValues = {
         name: '',
         category: '',
-        expiryDate: '',
+        expiration_date: '',
         quantity:''
     };
       
     const validationSchema = Yup.object({
-        email: Yup.string().email('Invalid email address').required('Email is required'),
+        name: Yup.string().required('Name is required'),
     });
 
     const handleSubmit = async (values, { setSubmitting }) => {
-        console.log("submit value:", values)
+        try {
+            const extendedValues = { ...values, user_id: 18, acquire_date: '2025-01-01', priority: 0 }; 
+            const response = await api.post('/list/create', extendedValues);
+            alert(response?.data?.message);
+        } catch (error) {
+            console.log("error")
+        } finally {
+          setSubmitting(false);
+        }
     }
 
     return (
@@ -52,48 +61,41 @@ const AddItemModal = ({ open, handleClose }) => {
                 <Fade in={open}>
                 
                 <Box sx={style}>
-                    {/* MODAL HEADER */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb:'2rem'}}>
-                        <Button onClick={handleClose}>CANCEL</Button>
-                        <Formik
-                            initialValues={initialValues}
-                            validationSchema={validationSchema}
-                            onSubmit={handleSubmit}
-                        >
-                            {({ isSubmitting }) => (
-                                <LoadingButton
-                                type="submit"
-                                size="large"
-                                variant="contained"
-                                color="primary"
-                                loading={isSubmitting}
-                                disableElevation
-                                >
-                                ADD
-                                </LoadingButton>
-                            )}
-                        </Formik>
-                    </Box>
+                    <Formik
+                        initialValues={initialValues}
+                        validationSchema={validationSchema}
+                        onSubmit={(values, { setSubmitting }) => {
+                            console.log("Form submitted with values:", values);
+                            handleSubmit(values, { setSubmitting });
+                        }}
+                    >
+                        {({ errors, touched, isSubmitting }) => (
+                            <Form>
+                                {/* MODAL HEADER */}
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb:'2rem'}}>
+                                    <Button onClick={handleClose}>CANCEL</Button>
+                                    <LoadingButton
+                                        type="submit"
+                                        size="large"
+                                        variant="contained"
+                                        color="primary"
+                                        loading={isSubmitting}
+                                        disableElevation
+                                    >
+                                    ADD
+                                    </LoadingButton>
+                                </Box>
 
-                    {/* MODAL CONTENT */}
-                    <Box>
-                        <Avatar 
-                            alt="Emoji" 
-                            src="/static/images/avatar/1.jpg"
-                            sx={{ width: 80, height: 80 }}
-                        />
+                                {/* MODAL CONTENT */}
+                                <Box>
+                                    <Avatar 
+                                        alt="Emoji" 
+                                        src="/static/images/avatar/1.jpg"
+                                        sx={{ width: 80, height: 80 }}
+                                    />
 
-                        {/* ADD ITEM FORM */}
-                        <Formik
-                            initialValues={initialValues}
-                            validationSchema={validationSchema}
-                            onSubmit={(values, { setSubmitting }) => {
-                                console.log("Form submitted with values:", values);
-                                handleSubmit(values, { setSubmitting });
-                            }}
-                        >
-                            {({ errors, touched }) => (
-                                <Form>
+                                    {/* ADD ITEM FORM */}
+                                
                                     <Grid2 
                                         container
                                         spacing={2}
@@ -151,14 +153,14 @@ const AddItemModal = ({ open, handleClose }) => {
                                             pb: { xs: 0, sm: 4, md: 1 }
                                             }}
                                         >
-                                            <Field name="exDate">
+                                            <Field name="expiration_date">
                                                 {({ field }) => (
                                                     <TextField
                                                     {...field}
                                                     label="Expiry Date"
                                                     variant="standard"
-                                                    error={touched.exDate && Boolean(errors.exDate)}
-                                                    helperText={touched.exDate ? errors.exDate : ' '}
+                                                    error={touched.expiration_date && Boolean(errors.expiration_date)}
+                                                    helperText={touched.expiration_date ? errors.expiration_date : ' '}
                                                     fullWidth
                                                     />
                                                 )}
@@ -186,10 +188,10 @@ const AddItemModal = ({ open, handleClose }) => {
                                             </Field>
                                         </Grid2>
                                     </Grid2>
-                                </Form>
-                            )}
-                        </Formik>
-                    </Box>
+                                </Box>
+                            </Form>
+                        )}
+                    </Formik>
                 </Box>
                 </Fade>
             </Modal>
