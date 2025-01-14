@@ -28,6 +28,7 @@ Route::group([
 ], function () {
     Route::post('create', [ItemController::class, 'create']);
     Route::get('get', [ItemController::class, 'get']);
+    Route::get('detail/{id}', [ItemController::class, 'getDetail']);
 });
 
 

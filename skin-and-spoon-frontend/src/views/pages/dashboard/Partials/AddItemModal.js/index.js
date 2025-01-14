@@ -5,7 +5,7 @@ import { Formik, Form, Field } from 'formik';
 import LoadingButton from '@mui/lab/LoadingButton';
 import api from '../../../../../api/axios';
 
-const AddItemModal = ({ open, handleClose }) => {
+const AddItemModal = ({ open, handleClose, data }) => {
     const style = {
         position: 'absolute',
         top: '50%',
@@ -21,10 +21,10 @@ const AddItemModal = ({ open, handleClose }) => {
     };
 
     const initialValues = {
-        name: '',
-        category: '',
-        expiration_date: '',
-        quantity:''
+        name: data?.name || '',
+        category: data?.item_category_id || '',
+        expiration_date: data?.expiration_date || '',
+        quantity: data?.quantity || 0
     };
       
     const validationSchema = Yup.object({
@@ -64,6 +64,7 @@ const AddItemModal = ({ open, handleClose }) => {
                     <Formik
                         initialValues={initialValues}
                         validationSchema={validationSchema}
+                        enableReinitialize
                         onSubmit={(values, { setSubmitting }) => {
                             console.log("Form submitted with values:", values);
                             handleSubmit(values, { setSubmitting });

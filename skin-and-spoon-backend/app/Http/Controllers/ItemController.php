@@ -14,4 +14,8 @@ class ItemController extends Controller
     {
         return ItemService::create($request);
     }
+    public function getDetail($id)
+    {
+        return ItemService::getDetail($id);
+    }
 }

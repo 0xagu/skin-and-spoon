@@ -7,8 +7,18 @@ import api from '../../../../../api/axios';
 
 const CardByWeek = () => {
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
+  const handleOpen = (mode = 'add', id = null) => {
+    if (mode === 'add') {
+      setViewDetailId(null);
+    } else if (mode === 'view' && id) {
+      setViewDetailId(id);
+    }
+    setOpen(true);
+  };
+  
   const handleClose = () => setOpen(false);
+
+  const [viewDetailId, setViewDetailId] = useState('');
 
   const { data: items } = useQuery({
     queryKey: ['items'],
@@ -18,6 +28,20 @@ const CardByWeek = () => {
       return typeof result === 'object' ? result : {};
     }
   });
+
+  const { data: itemDetail } = useQuery({
+    queryKey: ['itemDetail', viewDetailId],
+    queryFn: async () => {
+      const response = await api.get(`/list/detail/${viewDetailId}`);
+      const result = response.data;
+      return typeof result === 'object' ? result : {};
+    },
+    enabled: !!viewDetailId
+  });
+
+  const handleViewDetail = (id) => {
+    handleOpen('view', id);
+  };
   return (
     <Box>
       <Box>
@@ -35,7 +59,7 @@ const CardByWeek = () => {
                 >
                 <Typography variant="h6" gutterBottom>{row?.category_name}</Typography>
                 <Button 
-                  onClick={handleOpen}
+                  onClick={() => handleOpen('add')} 
                   variant="contained" 
                   sx={{ ml: 2 }}
                 >
@@ -45,7 +69,7 @@ const CardByWeek = () => {
               <Grid2 container direction="column" spacing={2}>
                 {row?.items?.map((item, index) => (
                   <Grid2 item xs={12} sm={4} key={index}>
-                    <CardItem category={item}/>
+                    <CardItem category={item} handleViewDetail={handleViewDetail} />
                   </Grid2>
                 ))}
               </Grid2>
@@ -57,7 +81,11 @@ const CardByWeek = () => {
         )}
         </Grid2>
       </Box>
-      <AddItemModal open={open} handleClose={handleClose} />
+      <AddItemModal 
+        open={open} 
+        handleClose={handleClose} 
+        data={viewDetailId ? itemDetail : null}
+      />
     </Box>
   );
 };

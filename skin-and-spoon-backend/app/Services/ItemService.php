@@ -68,6 +68,19 @@ class ItemService {
             'error' => 0
         ], 200);
     }
+    public static function getDetail($id)
+    {
+        $item = Item::where('id', $id)->with('itemCategory')->first();
+
+        if (!$item) {
+            return response()->json([
+                'error' => 1,
+                'message' => 'Item not found'
+            ], 400);
+        }
+
+        return response()->json($item);
+    }
 }
 
 ?>
