@@ -18,4 +18,8 @@ class ItemController extends Controller
     {
         return ItemService::getDetail($id);
     }
+    public function updateFavourite(Request $request)
+    {
+        return ItemService::updateFavourite($request);
+    }
 }

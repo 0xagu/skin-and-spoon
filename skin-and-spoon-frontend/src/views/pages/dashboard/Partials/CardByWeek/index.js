@@ -4,9 +4,11 @@ import CardItem from './CardItem.js';
 import AddItemModal from '../AddItemModal.js/index.js';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../../../api/axios';
-
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 const CardByWeek = () => {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   const handleOpen = (mode = 'add', id = null) => {
     if (mode === 'add') {
       setViewDetailId(null);
@@ -42,6 +44,23 @@ const CardByWeek = () => {
   const handleViewDetail = (id) => {
     handleOpen('view', id);
   };
+
+  const mutation = useMutation({
+    mutationFn: async (id) => {
+        const response = await api.post('/list/update-favourite', { id });
+        return response.data;
+    },
+    onSuccess: () => {
+        queryClient.invalidateQueries(['items']);
+    },
+    onError: (error) => {
+        console.error('Error updating item:', error);
+    },
+  });
+
+  const handleUpdateFavourite = (id) => {
+    mutation.mutate(id);
+};
   return (
     <Box>
       <Box>
@@ -69,7 +88,7 @@ const CardByWeek = () => {
               <Grid2 container direction="column" spacing={2}>
                 {row?.items?.map((item, index) => (
                   <Grid2 item xs={12} sm={4} key={index}>
-                    <CardItem category={item} handleViewDetail={handleViewDetail} />
+                    <CardItem category={item} handleViewDetail={handleViewDetail} handleUpdateFavourite={handleUpdateFavourite} />
                   </Grid2>
                 ))}
               </Grid2>

@@ -75,16 +75,28 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                 {/* MODAL HEADER */}
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb:'2rem'}}>
                                     <Button onClick={handleClose}>CANCEL</Button>
-                                    <LoadingButton
-                                        type="submit"
-                                        size="large"
-                                        variant="contained"
-                                        color="primary"
-                                        loading={isSubmitting}
-                                        disableElevation
-                                    >
-                                    ADD
-                                    </LoadingButton>
+                                    {data ? 
+                                        <LoadingButton
+                                            type="submit"
+                                            size="large"
+                                            variant="contained"
+                                            color="primary"
+                                            loading={isSubmitting}
+                                            disableElevation
+                                        >
+                                        EDIT
+                                        </LoadingButton>
+                                    :  <LoadingButton
+                                            type="submit"
+                                            size="large"
+                                            variant="contained"
+                                            color="primary"
+                                            loading={isSubmitting}
+                                            disableElevation
+                                        >
+                                        ADD
+                                        </LoadingButton>
+                                    }
                                 </Box>
 
                                 {/* MODAL CONTENT */}

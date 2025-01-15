@@ -81,6 +81,23 @@ class ItemService {
 
         return response()->json($item);
     }
+    public static function updateFavourite ($request) {
+        $item = Item::where('id', $request->input('id'))->with('itemCategory')->first();
+        if ($item) {
+            $item->priority = $item->priority == 0 ? 1 : 0;
+            $item->save();
+        } else {
+            return response()->json([
+                'message' => 'Item not found',
+                'error' => 1
+            ], 200);
+        }
+       
+        return response()->json([
+            'message' => 'Item updated successfully!',
+            'error' => 0
+        ], 200);
+    }
 }
 
 ?>
