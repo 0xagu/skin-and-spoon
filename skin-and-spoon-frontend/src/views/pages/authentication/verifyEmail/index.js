@@ -31,13 +31,16 @@ const VerifyEmail = () => {
         if (error === 0) {
             setMessage('Verification successful!');
         } else {
-            setMessage('Please re-enter a valid email.');
+            if (action === 'login'){
+                setMessage('Account already existed, please proceeed to login');
+            } else if (action === 'register') {
+                setMessage('Please re-enter a valid email.');
+            }
         }
     
         setAction(action);
-    }, [verifyResult]);
+    }, [verifyResult, action]);
 
-    console.log("verifyResult?.data:", verifyResult?.data);
     const initialValues = {
         email: verifyResult?.data || '',
         password: '',
@@ -58,7 +61,7 @@ const VerifyEmail = () => {
             const endpoint = action === 'register' ? '/auth/register' : '/auth/welcome'; 
             const response = await api.post(endpoint, values);
 
-            console.log("response:", response);
+            
             if (response?.data?.error === 0) {
               console.log("verify success!")
               if (response?.data?.action === 'login') {

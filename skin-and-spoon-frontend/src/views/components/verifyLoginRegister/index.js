@@ -106,7 +106,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                   fontWeight: '800'
                 }}
               >
-                Sign Up (VerifyEmail)
+                { action === 'login' ? 'Sign In' : 'Sign Up (VerifyEmail)' }
               </DialogTitle>
               <Formik
                 initialValues={initialValues}
@@ -205,6 +205,22 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                         {action === 'login' ? 'Login' : 'Register'}
                       </LoadingButton>
                     </DialogActions>
+
+                    {action === 'login' ? 
+                      <Grid2 sx={{ display: "flex", alignItems: "center" }}>
+                      <h6 style={{ margin: 0, marginRight: "8px" }}>Don't have an account yet?</h6>
+                      <Link
+                        component="button"
+                        variant="body2"
+                        onClick={() => {
+                          setAction('register');
+                        }}
+                        style={{ textDecoration: "underline", cursor: "pointer" }}
+                      >
+                        Register
+                      </Link>
+                    </Grid2>
+                    : 
                     <Grid2 sx={{ display: "flex", alignItems: "center" }}>
                       <h6 style={{ margin: 0, marginRight: "8px" }}>Already have an account?</h6>
                       <Link
@@ -217,7 +233,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                       >
                         Log in.
                       </Link>
-                    </Grid2>
+                    </Grid2>}
                   </Form>
                 )}
               </Formik>
