@@ -19,7 +19,7 @@ function Sidebar({ mobileOpen, handleDrawerToggle}) {
       <Divider />
       <List>
         {['All', 'Starred', 'Expired', 'Shopping List', 'Analytic'].map((text, index) => (
-          <ListItem key={text} disablePadding>
+          <ListItem key={text} onClick={() => {console.log(text)}} disablePadding>
             <ListItemButton>
               <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
@@ -30,7 +30,7 @@ function Sidebar({ mobileOpen, handleDrawerToggle}) {
       <Divider />
       <List>
         {['Help', 'Logout'].map((text, index) => (
-          <ListItem key={text} disablePadding>
+          <ListItem key={text} onClick={() => {console.log(text)}} disablePadding>
             <ListItemButton>
               <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
