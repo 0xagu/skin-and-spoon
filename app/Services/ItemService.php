@@ -11,11 +11,19 @@ use Illuminate\Support\Facades\{
     Validator
 };
 
+use Carbon\Carbon;
 class ItemService {
     public static function get($request)
     {
-        $items = Item::where('user_id',18)
-                    ->where('status','!=',9)
+        $year = $request->query('year', Carbon::now()->year);
+        $weekNumber = $request->query('week', Carbon::now()->weekOfYear);
+
+        $startOfWeek = Carbon::now()->setISODate($year, $weekNumber)->startOfWeek(Carbon::SUNDAY);
+        $endOfWeek = Carbon::now()->setISODate($year, $weekNumber)->endOfWeek(Carbon::SATURDAY);
+
+        $items = Item::where('user_id', 18)
+                    ->where('status', '!=', 9)
+                    ->whereBetween('expiration_date', [$startOfWeek, $endOfWeek])
                     ->with('itemCategory')
                     ->get();
 
@@ -97,6 +105,34 @@ class ItemService {
             'message' => 'Item updated successfully!',
             'error' => 0
         ], 200);
+    }
+    public static function getListDate() {
+        $items = Item::select('expiration_date')
+            ->whereNotNull('expiration_date')
+            ->get();
+    
+        $availableWeeks = [];
+    
+        foreach ($items as $item) {
+            $expirationDate = Carbon::parse($item->expiration_date);
+    
+            $year = $expirationDate->year;
+            $week = $expirationDate->weekOfYear;
+    
+            if (!isset($availableWeeks[$year])) {
+                $availableWeeks[$year] = [];
+            }
+    
+            if (!in_array($week, $availableWeeks[$year])) {
+                $availableWeeks[$year][] = $week;
+            }
+        }
+    
+        foreach ($availableWeeks as &$weeks) {
+            sort($weeks);
+        }
+    
+        return $availableWeeks;
     }
 }
 

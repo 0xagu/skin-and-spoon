@@ -22,4 +22,8 @@ class ItemController extends Controller
     {
         return ItemService::updateFavourite($request);
     }
+    public function getListDate(Request $request)
+    {
+        return ItemService::getListDate($request);
+    }
 }

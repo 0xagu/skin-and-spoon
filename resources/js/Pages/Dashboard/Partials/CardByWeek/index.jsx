@@ -5,7 +5,7 @@ import AddItemModal from '../AddItemModal.jsx/index.jsx';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../../api/axios';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
-const CardByWeek = () => {
+const CardByWeek = ({ filter, year, week }) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -23,9 +23,13 @@ const CardByWeek = () => {
   const [viewDetailId, setViewDetailId] = useState('');
 
   const { data: items } = useQuery({
-    queryKey: ['items'],
+    queryKey: ['items', year, week],
     queryFn: async () => {
-      const response = await api.get(`/list/get`);
+      const response = await api.get(`/list/get`,
+        {
+          params: { year, week }
+        }
+      );
       const result = response.data;
       return typeof result === 'object' ? result : {};
     }
@@ -34,7 +38,9 @@ const CardByWeek = () => {
   const { data: itemDetail } = useQuery({
     queryKey: ['itemDetail', viewDetailId],
     queryFn: async () => {
-      const response = await api.get(`/list/detail/${viewDetailId}`);
+      const response = await api.post(`/list/detail`, {
+        id: viewDetailId
+      });
       const result = response.data;
       return typeof result === 'object' ? result : {};
     },

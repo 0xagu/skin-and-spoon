@@ -30,6 +30,7 @@ Route::group([
     Route::get('get', [ItemController::class, 'get']);
     Route::get('detail/{id}', [ItemController::class, 'getDetail']);
     Route::post('update-favourite', [ItemController::class, 'updateFavourite']);
+    Route::get('get-list-date', [ItemController::class, 'getListDate']);
 });
 
 
