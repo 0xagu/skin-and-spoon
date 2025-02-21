@@ -11,6 +11,8 @@ import Footer from '../../components/Footer';
 import CardByWeek from './Partials/CardByWeek';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axios';
+import ShoppingList from './Partials/ShoppingList';
+import Analytic from './Partials/Analytic';
 
 function Dashboard() {
   const drawerWidth = 240;
@@ -46,6 +48,26 @@ function Dashboard() {
   }
 
   const availableWeeks = itemDates[activeYearTab] || [];
+
+  if (filter === "Shopping List") {
+    return (
+      <ShoppingList 
+        handleDrawerToggle={handleDrawerToggle} 
+        mobileOpen={mobileOpen} 
+        setFilter={setFilter} 
+        drawerWidth={drawerWidth}
+      />
+    );
+  } else if (filter === "Analytic") {
+    return (
+      <Analytic
+        handleDrawerToggle={handleDrawerToggle} 
+        mobileOpen={mobileOpen} 
+        setFilter={setFilter} 
+        drawerWidth={drawerWidth}
+      />
+    )
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>

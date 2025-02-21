@@ -23,11 +23,11 @@ const CardByWeek = ({ filter, year, week }) => {
   const [viewDetailId, setViewDetailId] = useState('');
 
   const { data: items } = useQuery({
-    queryKey: ['items', year, week],
+    queryKey: ['items', filter, year, week],
     queryFn: async () => {
       const response = await api.get(`/list/get`,
         {
-          params: { year, week }
+          params: { filter, year, week }
         }
       );
       const result = response.data;

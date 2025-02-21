@@ -17,15 +17,26 @@ class ItemService {
     {
         $year = $request->query('year', Carbon::now()->year);
         $weekNumber = $request->query('week', Carbon::now()->weekOfYear);
+        $filter = $request->query('filter', 'All');
 
         $startOfWeek = Carbon::now()->setISODate($year, $weekNumber)->startOfWeek(Carbon::SUNDAY);
         $endOfWeek = Carbon::now()->setISODate($year, $weekNumber)->endOfWeek(Carbon::SATURDAY);
+        $today = Carbon::today();
+        
+        $query = Item::where('user_id', 18)
+                ->where('status', '!=', 9)
+                ->whereBetween('expiration_date', [$startOfWeek, $endOfWeek])
+                ->with('itemCategory');
 
-        $items = Item::where('user_id', 18)
-                    ->where('status', '!=', 9)
-                    ->whereBetween('expiration_date', [$startOfWeek, $endOfWeek])
-                    ->with('itemCategory')
-                    ->get();
+        if ($filter === 'Starred') {
+            $query->where('priority', 1);
+        } elseif ($filter === 'Expired') {
+            $query->where('expiration_date', '<', $today); // Expired items
+        } else {
+            $query->whereBetween('expiration_date', [$startOfWeek, $endOfWeek]); // Default case
+        }
+
+        $items = $query->get();
 
         $groupedItems = $items->groupBy(function ($item) {
             return $item->itemCategory->name;
