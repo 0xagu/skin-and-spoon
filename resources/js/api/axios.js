@@ -1,8 +1,19 @@
 import axios from "axios";
-const BASE_URL = import.meta.env.VITE_API_URL;
 
-// PUBLIC
-export default axios.create({
-  baseURL: BASE_URL + '/api',
-  headers: { 'Content-Type': 'application/json' }
+export const authApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL + '/api',
+  withCredentials: true,
 });
+
+// Add the access token dynamically
+authApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+export default authApi;

@@ -5,8 +5,9 @@ import api from "../../api/axios";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Grid2, TextField, Typography, Link } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import welcomeImage from '../../../assets/images/welcome.jpeg';
-import { useNavigate } from 'react-router-dom';
 import { router } from '@inertiajs/react';
+import csrf from '../../api/csrf';
+import sessionApi from '../../api/sessionApi';
 const VerifyLoginRegister = ({ open, handleClose }) => {
     const [action, setAction] = useState('');
 
@@ -25,16 +26,34 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
         email: Yup.string().email('Invalid email address').required('Email is required'),
     });
 
+    const getUser = async () => {
+      try {
+        const response = await api.get('/user');
+        return response.data;
+      } catch (error) {
+        console.error("Failed to fetch user:", error.response?.data || error.message);
+        return null;
+      }
+    };
+    
     const handleLogin = async (values, { setSubmitting }) => {
         try {
-            const endpoint = action === 'login' ? '/oauth/login' : '/auth/welcome'; 
-            const response = await api.post(endpoint, values);
+            await csrf();
 
+            const endpoint = action === 'login' ? '/login' : '/auth/welcome'; 
+            const response = await sessionApi.post(endpoint, values, {
+              withCredentials: true, // ensure cookies are sent
+          });
+
+          const user = await getUser();
+  
             if (response?.data?.error === 0) {
               console.log("verify success!")
 
+              // for mobile later
               localStorage.setItem('access_token', response?.data?.data?.access_token); 
               localStorage.setItem('refresh_token', response?.data?.data?.refresh_token); 
+
               if (response?.data?.action === 'login') {
                 setAction('login');
               } else if (response?.data?.action === 'dashboard') {

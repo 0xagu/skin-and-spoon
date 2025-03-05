@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box,Typography } from '@mui/material';
+import { Box,Typography, Button } from '@mui/material';
 import Header from '../../../../components/Header';
 import Sidebar from '../../../../components/Sidebar';
 import Footer from '../../../../components/Footer';
@@ -22,6 +22,17 @@ function ShoppingList({ handleDrawerToggle, mobileOpen, setFilter, drawerWidth})
                 >
                 <Typography variant="h4">Shopping List</Typography>
                 <Typography variant="body1">Your shopping list items will go here.</Typography>
+
+                <Button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleUpdateFavourite(category?.id);
+                    }}
+                    variant="contained" 
+                    sx={{ ml: 2 }}
+                >
+                Fav
+                </Button>
             </Box>
             <Footer />
         </Box>

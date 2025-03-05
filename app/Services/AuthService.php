@@ -190,7 +190,11 @@ class AuthService {
         $user = User::where('email', $request->input('email'))->first();
 
         if ($user && Hash::check($request->input('password'), $user->password)) {
-            $accessToken = $user->createToken('SkinAndSpoon')->accessToken;
+
+            // session based login
+            Auth::guard('web')->login($user);
+             
+            $token = $user->createToken('SkinAndSpoon')->plainTextToken;
 
             LogAuth::create([
                 'user_id' => $user->id,
@@ -205,7 +209,7 @@ class AuthService {
                 'error' => 0,
                 'data' => [
                     'user' => $user,
-                    'access_token' => $accessToken->token,
+                    'access_token' => $token
                 ],
                 'action' => 'dashboard'
             ]);

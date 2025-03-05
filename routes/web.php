@@ -1,18 +1,25 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\AuthController;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-
-/** PUBLIC ROUTE */
-Route::get('/', function () {
-    abort(404);
-});
+use App\Http\Controllers\Auth\AuthController;
 
 Route::get('/', function () {
-    return inertia('Home/Index');
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+    return Inertia::render('Home/Index');
+})->name('home');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard/Index');
+    })->name('dashboard');
 });
 
-Route::get('/dashboard', function () {
-    return inertia('Dashboard/Index');
-});
+Route::get('/login', function () {
+    return Inertia::render('Auth/Login');
+})->name('login');
+
+Route::post('/login', [AuthController::class, 'login']);
