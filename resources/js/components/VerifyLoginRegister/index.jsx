@@ -13,7 +13,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
 
     useEffect(() => {
       if(!open){
-        setAction('');
+        setAction('login');
       }
     }, [open])
 

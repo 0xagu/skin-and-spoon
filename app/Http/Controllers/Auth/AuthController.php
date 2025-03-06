@@ -28,4 +28,8 @@ class AuthController extends Controller
     {
         return AuthService::login($request);
     }
+    public function logout(Request $request)
+    {
+        return AuthService::logout($request);
+    }
 }
