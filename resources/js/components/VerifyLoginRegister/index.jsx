@@ -40,7 +40,7 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
         try {
             await csrf();
 
-            const endpoint = action === 'login' ? '/login' : '/auth/welcome'; 
+            const endpoint = action === 'login' ? '/login' : '/welcome'; 
             const response = await sessionApi.post(endpoint, values, {
               withCredentials: true, // ensure cookies are sent
           });

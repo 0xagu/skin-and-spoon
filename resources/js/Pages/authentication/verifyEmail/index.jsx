@@ -58,7 +58,7 @@ const VerifyEmail = () => {
     
     const handleVerifyEmail = async (values, { setSubmitting }) => {
         try {
-            const endpoint = action === 'register' ? '/auth/register' : '/auth/welcome'; 
+            const endpoint = action === 'register' ? '/auth/register' : '/welcome'; 
             const response = await api.post(endpoint, values);
 
             
