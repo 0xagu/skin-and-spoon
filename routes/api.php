@@ -37,7 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/delete', [ShoppingController::class, 'deleteShoppingItemById']);
             Route::post('/update', [ShoppingController::class, 'updateShoppingItemById']);
         });
-        
+    });
+
+    Route::prefix('analytic')->group(function () {
+        Route::get('expiry', [ItemController::class, 'getExpiryMetric']);
+        Route::get('waste', [ItemController::class, 'getWasteMetric']);
     });
 
     Route::get('/user', function (\Illuminate\Http\Request $request) {

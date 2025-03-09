@@ -1,5 +1,6 @@
 import './bootstrap';
-
+import store from './store/store';
+import { Provider } from "react-redux";
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,9 +19,11 @@ createInertiaApp({
   },
   setup({ el, App, props }) {
     createRoot(el).render(
-      <QueryClientProvider client={queryClient}>
-        <App {...props} />
-      </QueryClientProvider>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <App {...props} />
+        </QueryClientProvider>
+      </Provider>
     );
   },
 });

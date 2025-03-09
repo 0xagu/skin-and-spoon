@@ -13,13 +13,14 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axios';
 import ShoppingList from './Partials/ShoppingList';
 import Analytic from './Partials/Analytic';
+import { useSelector } from 'react-redux';
 
 function Dashboard() {
   const drawerWidth = 240;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeYearTab, setActiveYearTab] = useState(2025);
   const [activeWeekTab, setActiveWeekTab] = useState(7);
-  const [filter, setFilter] = useState(0);
+  const filter = useSelector((state) => state.filter);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -35,12 +36,13 @@ function Dashboard() {
   };
 
   const { data: itemDates } = useQuery({
-    queryKey: ['itemDates'],
+    queryKey: ['itemDates', filter],
     queryFn: async () => {
-      const response = await api.get(`/list/get-list-date`);
+      const response = await api.get(`/list/get-list-date?filter=${filter?.filter}`);
       const result = response.data;
       return typeof result === 'object' ? result : {};
-    }
+    },
+    enabled: !!filter,
   });
 
   if (!itemDates) {
@@ -49,21 +51,21 @@ function Dashboard() {
 
   const availableWeeks = itemDates[activeYearTab] || [];
 
-  if (filter === "Shopping List") {
+  if (filter?.filter === "Shopping List") {
     return (
       <ShoppingList 
         handleDrawerToggle={handleDrawerToggle} 
         mobileOpen={mobileOpen} 
-        setFilter={setFilter} 
+        // setFilter={setFilter} 
         drawerWidth={drawerWidth}
       />
     );
-  } else if (filter === "Analytic") {
+  } else if (filter?.filter === "Analytic") {
     return (
       <Analytic
         handleDrawerToggle={handleDrawerToggle} 
         mobileOpen={mobileOpen} 
-        setFilter={setFilter} 
+        // setFilter={setFilter} 
         drawerWidth={drawerWidth}
       />
     )
@@ -123,7 +125,9 @@ function Dashboard() {
         </Box>
       </Box>
 
-      <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} setFilter={setFilter}/>
+      <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} 
+      // setFilter={setFilter}
+      />
       <Footer />
     </Box>
   );

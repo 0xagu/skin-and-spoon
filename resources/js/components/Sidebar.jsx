@@ -1,4 +1,3 @@
-import React, { useState} from 'react';
 import { Box, Drawer, List,
   ListItem,
   ListItemButton,
@@ -7,9 +6,12 @@ import { Box, Drawer, List,
   Divider,
   Toolbar,
   useMediaQuery } from '@mui/material';
-  import { Inbox as InboxIcon, Mail as MailIcon } from '@mui/icons-material';
+import { Inbox as InboxIcon, Mail as MailIcon } from '@mui/icons-material';
+import { useDispatch } from 'react-redux';
+import { setFilter } from '../store/action';
 
-function Sidebar({ mobileOpen, handleDrawerToggle, setFilter}) {
+function Sidebar({ mobileOpen, handleDrawerToggle }) {
+  const dispatch = useDispatch();
   const isMobile = useMediaQuery('(max-width:600px)');
   const drawerWidth = 240;
   
@@ -17,8 +19,8 @@ function Sidebar({ mobileOpen, handleDrawerToggle, setFilter}) {
   const actions = ['Help', 'Logout'];
 
   const handleFilterChange = (filter) => {
-    setFilter(filter);
-  }
+    dispatch(setFilter(filter));
+  };
 
   const drawer = (
     <Box sx={{ width: drawerWidth }} role="presentation">

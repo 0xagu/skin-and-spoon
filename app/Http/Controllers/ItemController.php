@@ -26,4 +26,12 @@ class ItemController extends Controller
     {
         return ItemService::getListDate($request);
     }
+    public function getExpiryMetric(Request $request)
+    {
+        return ItemService::getExpiryMetric($request);
+    }
+    public function getWasteMetric(Request $request)
+    {
+        return ItemService::getWasteMetric($request);
+    }
 }

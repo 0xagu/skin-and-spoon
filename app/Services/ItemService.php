@@ -25,15 +25,28 @@ class ItemService {
         
         $query = Item::where('user_id', 18)
                 ->where('status', '!=', 9)
-                ->whereBetween('expiration_date', [$startOfWeek, $endOfWeek])
                 ->with('itemCategory');
 
         if ($filter === 'Starred') {
             $query->where('priority', 1);
+            if ($weekNumber == 0) { 
+                $query->whereYear('expiration_date', $year);
+            } else { 
+                $query->whereBetween('expiration_date', [$startOfWeek, $endOfWeek]);
+            }
         } elseif ($filter === 'Expired') {
             $query->where('expiration_date', '<', $today); // Expired items
+            if ($weekNumber == 0) { 
+                $query->whereYear('expiration_date', $year);
+            } else {
+                $query->whereBetween('expiration_date', [$startOfWeek, $endOfWeek]);
+            }
         } else {
-            $query->whereBetween('expiration_date', [$startOfWeek, $endOfWeek]); // Default case
+            if ($weekNumber == 0) { 
+                $query->whereYear('expiration_date', $year); 
+            } else {
+                $query->whereBetween('expiration_date', [$startOfWeek, $endOfWeek]);
+            }
         }
 
         $items = $query->get();
@@ -117,21 +130,30 @@ class ItemService {
             'error' => 0
         ], 200);
     }
-    public static function getListDate() {
-        $items = Item::select('expiration_date')
-            ->whereNotNull('expiration_date')
-            ->get();
+    public static function getListDate($request) {
+        $filter = $request->query('filter');
+
+        $query = Item::select('expiration_date')
+            ->whereNotNull('expiration_date');
     
+        $today = Carbon::today();
+    
+        if ($filter === 'Expired') {
+            $query->where('expiration_date', '<', $today);
+        } elseif ($filter === 'Starred') {
+            $query->where('priority', 1);
+        }
+    
+        $items = $query->get();
         $availableWeeks = [];
     
         foreach ($items as $item) {
             $expirationDate = Carbon::parse($item->expiration_date);
-    
             $year = $expirationDate->year;
             $week = $expirationDate->weekOfYear;
     
             if (!isset($availableWeeks[$year])) {
-                $availableWeeks[$year] = [];
+                $availableWeeks[$year] = ['0']; // 0 = all
             }
     
             if (!in_array($week, $availableWeeks[$year])) {
@@ -139,11 +161,21 @@ class ItemService {
             }
         }
     
+        // Sort weeks but keep "0" (all) at the start
         foreach ($availableWeeks as &$weeks) {
-            sort($weeks);
+            usort($weeks, function ($a, $b) {
+                return ($a == '0') ? -1 : (($b == '0') ? 1 : $a - $b);
+            });
         }
     
         return $availableWeeks;
+    }
+    
+    public static function getExpiryMetric() {
+        dd("getExpiryMetric");
+    }
+    public static function getWasteMetric() {
+        dd("getWasteMetric");
     }
 }
 
