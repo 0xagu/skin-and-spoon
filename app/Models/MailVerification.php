@@ -28,6 +28,18 @@ class MailVerification extends Model
         'updated_at',
     ];
 
+    protected $hidden = [
+        'id'
+    ];
+    
+    protected $appends = [
+        'encrypted_id'
+    ];
+
+    public function getEncryptedIdAttribute() {
+        return \Crypt::encryptString($this->id);
+    }
+
     public function user() {
         return $this->belongsTo( User::class, 'email' );
     }

@@ -12,9 +12,22 @@ class MailTemplate extends Model
     protected $table = 'mail_templates';
     
     protected $fillable = [
+        'uuid',
         'name',
         'subject',
         'body',
         'status',
     ];
+
+    protected $hidden = [
+        'id'
+    ];
+    
+    protected $appends = [
+        'encrypted_id'
+    ];
+
+    public function getEncryptedIdAttribute() {
+        return \Crypt::encryptString($this->id);
+    }
 }

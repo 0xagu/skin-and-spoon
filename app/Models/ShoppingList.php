@@ -15,6 +15,18 @@ class ShoppingList extends Model
         'status',
     ];
 
+    protected $hidden = [
+        'id'
+    ];
+    
+    protected $appends = [
+        'encrypted_id'
+    ];
+
+    public function getEncryptedIdAttribute() {
+        return \Crypt::encryptString($this->id);
+    }
+
     public function shoppingList()
     {
         return $this->hasMany(ShoppingItem::class);

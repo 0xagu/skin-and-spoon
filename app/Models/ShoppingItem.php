@@ -18,6 +18,18 @@ class ShoppingItem extends Model
         'status'
     ];
 
+    protected $hidden = [
+        'id'
+    ];
+    
+    protected $appends = [
+        'encrypted_id'
+    ];
+
+    public function getEncryptedIdAttribute() {
+        return \Crypt::encryptString($this->id);
+    }
+
     public function shoppingList()
     {
         return $this->belongsTo( ShoppingList::class, 'shopping_list_id' );

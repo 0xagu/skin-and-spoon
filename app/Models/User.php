@@ -21,6 +21,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
+        'uuid',
         'name',
         'email',
         'is_verified',
@@ -33,8 +34,13 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $hidden = [
+        'id',
         'password',
         'remember_token', //remember me persistent cookie 
+    ];
+
+    protected $appends = [
+        'encrypted_id'
     ];
 
     /**
@@ -50,6 +56,10 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    public function getEncryptedIdAttribute() {
+        return \Crypt::encryptString($this->id);
+    }
+
     public function mailVerification()
     {
         return $this->belongsTo( MailVerification::class,'email' );
@@ -59,4 +69,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo( LogAuth::class,'user_id' );
     }
+
+    public function categories() {
+        return $this->hasMany(ItemCategory::class, 'user_id');
+    }    
 }

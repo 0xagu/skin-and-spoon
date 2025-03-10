@@ -2,7 +2,9 @@
 
 namespace App\Services;
 use App\Models\{
-    Item
+    Item,
+    ItemCategory,
+    User
 };
 use Illuminate\Support\Facades\{
     Hash,
@@ -176,6 +178,48 @@ class ItemService {
     }
     public static function getWasteMetric() {
         dd("getWasteMetric");
+    }
+    public static function addMemberToCategory($request) {
+        $validatedData = $request->validate([
+            'category_id' => 'required|exists:item_categories,uuid',
+            'member_emails' => 'array',
+        ]);
+
+        try {
+            // Begin Transaction
+            \DB::beginTransaction();
+    
+            // Convert emails to user IDs
+            $memberIds = User::whereIn('email', $validatedData['member_emails'])->pluck('id')->toArray();
+
+            if (empty($memberIds)) {
+                return response()->json([
+                    'message' => 'No valid members found.',
+                    'error' => 1
+                ], 400);
+            }
+    
+            $memberIdsString = implode('|', $memberIds);
+    
+            $category = ItemCategory::where('uuid', $validatedData['category_id'])->firstOrFail();
+            $category->member_id = $memberIdsString;
+            $category->save();
+
+            \DB::commit();
+    
+            return response()->json([
+                'message' => 'Members added to category successfully!',
+                'error' => 0
+            ], 200);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+    
+            return response()->json([
+                'message' => 'Failed to add members to category!',
+                'error' => 1,
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 }
 

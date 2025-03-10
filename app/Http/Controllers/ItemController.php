@@ -34,4 +34,8 @@ class ItemController extends Controller
     {
         return ItemService::getWasteMetric($request);
     }
+    public function addMemberToCategory(Request $request)
+    {
+        return ItemService::addMemberToCategory($request);
+    }
 }

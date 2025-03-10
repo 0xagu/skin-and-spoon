@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('detail/{id}', [ItemController::class, 'getDetail']);
         Route::post('update-favourite', [ItemController::class, 'updateFavourite']);
         Route::get('get-list-date', [ItemController::class, 'getListDate']);
+        Route::post('add-member', [ItemController::class, 'addMemberToCategory']);
     });
 
     Route::prefix('shopping')->group(function () {
