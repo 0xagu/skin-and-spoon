@@ -20,14 +20,20 @@ class ItemService {
         $year = $request->query('year', Carbon::now()->year);
         $weekNumber = $request->query('week', Carbon::now()->weekOfYear);
         $filter = $request->query('filter', 'All');
+        $userId = Auth::id();
 
         $startOfWeek = Carbon::now()->setISODate($year, $weekNumber)->startOfWeek(Carbon::SUNDAY);
         $endOfWeek = Carbon::now()->setISODate($year, $weekNumber)->endOfWeek(Carbon::SATURDAY);
         $today = Carbon::today();
         
-        $query = Item::where('user_id', 18)
-                ->where('status', '!=', 9)
-                ->with('itemCategory');
+        $query = Item::where(function ($q) use ($userId) {
+            $q->where('user_id', $userId)
+              ->orWhereHas('itemCategory', function ($q) use ($userId) {
+                  $q->whereRaw("member_id REGEXP ?", ["(^|\\|)$userId(\\||$)"]);
+              });
+        })
+        ->where('status', '!=', 9)
+        ->with('itemCategory');
 
         if ($filter === 'Starred') {
             $query->where('priority', 1);
