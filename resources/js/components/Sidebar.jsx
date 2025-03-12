@@ -15,8 +15,8 @@ function Sidebar({ mobileOpen, handleDrawerToggle }) {
   const isMobile = useMediaQuery('(max-width:600px)');
   const drawerWidth = 240;
   
-  const menuItems = ['All', 'Starred', 'Expired', 'Shopping List', 'Analytic'];
-  const actions = ['Help', 'Logout'];
+  const menuItems = ['All', 'Starred', 'Expired', 'Shopping List', 'Analytic','AI Chat'];
+  const actions = ['Help'];
 
   const handleFilterChange = (filter) => {
     dispatch(setFilter(filter));

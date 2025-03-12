@@ -102,6 +102,7 @@ const Header = ({ handleDrawerToggle }) => {
                             </Menu>
                         </>
                     )}
+                    {auth?.user?.name}
                     {auth.user ? (
                         <Button color="inherit" onClick={handleLogout}>
                             Logout

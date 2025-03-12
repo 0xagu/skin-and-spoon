@@ -8,6 +8,7 @@ import welcomeImage from '../../../assets/images/welcome.jpeg';
 import { router } from '@inertiajs/react';
 import csrf from '../../api/csrf';
 import sessionApi from '../../api/sessionApi';
+
 const VerifyLoginRegister = ({ open, handleClose }) => {
     const [action, setAction] = useState('');
 
@@ -130,7 +131,6 @@ const VerifyLoginRegister = ({ open, handleClose }) => {
                 initialValues={initialValues}
                 validationSchema={validationSchema}
                 onSubmit={(values, { setSubmitting }) => {
-                    console.log("Form submitted with values:", values);
                     handleLogin(values, { setSubmitting });
                 }}
                 // validateOnChange={false}

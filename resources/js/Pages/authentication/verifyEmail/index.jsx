@@ -141,7 +141,6 @@ const VerifyEmail = () => {
                             initialValues={initialValues}
                             validationSchema={validationSchema}
                             onSubmit={(values, { setSubmitting }) => {
-                                console.log("Form submitted with values:", values);
                                 handleVerifyEmail(values, { setSubmitting });
                             }}
                             enableReinitialize={true}

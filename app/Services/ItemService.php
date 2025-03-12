@@ -25,7 +25,7 @@ class ItemService {
         $startOfWeek = Carbon::now()->setISODate($year, $weekNumber)->startOfWeek(Carbon::SUNDAY);
         $endOfWeek = Carbon::now()->setISODate($year, $weekNumber)->endOfWeek(Carbon::SATURDAY);
         $today = Carbon::today();
-        
+
         $query = Item::where(function ($q) use ($userId) {
             $q->where('user_id', $userId)
               ->orWhereHas('itemCategory', function ($q) use ($userId) {
@@ -140,10 +140,19 @@ class ItemService {
     }
     public static function getListDate($request) {
         $filter = $request->query('filter');
+        $userId = Auth::id();
 
         $query = Item::select('expiration_date')
-            ->whereNotNull('expiration_date');
-    
+                    ->whereNotNull('expiration_date')
+                    ->where(function ($q) use ($userId) {
+                        $q->where('user_id', $userId)
+                          ->orWhereHas('itemCategory', function ($q) use ($userId) {
+                              $q->whereRaw("member_id REGEXP ?", ["(^|\\|)$userId(\\||$)"]);
+                          });
+                    })
+                    ->where('status', '!=', 9)
+                    ->with('itemCategory');
+
         $today = Carbon::today();
     
         if ($filter === 'Expired') {
@@ -228,5 +237,4 @@ class ItemService {
         }
     }
 }
-
 ?>

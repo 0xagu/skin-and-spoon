@@ -65,7 +65,6 @@ const AddItemModal = ({ open, handleClose, data }) => {
                         validationSchema={validationSchema}
                         enableReinitialize
                         onSubmit={(values, { setSubmitting }) => {
-                            console.log("Form submitted with values:", values);
                             handleSubmit(values, { setSubmitting });
                         }}
                     >
