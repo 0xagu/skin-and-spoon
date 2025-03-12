@@ -4,3 +4,5 @@
 .env
 oauth-private.key
 oauth-public.key
+/public/build
+
