@@ -3,7 +3,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ShoppingController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\ChatController;
 
 Route::group([
     'prefix' => 'auth',
@@ -43,6 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('analytic')->group(function () {
         Route::get('expiry', [ItemController::class, 'getExpiryMetric']);
         Route::get('waste', [ItemController::class, 'getWasteMetric']);
+    });
+
+    Route::prefix('chat')->group(function () {
+        Route::post('ask', [ChatController::class, 'askChatGpt']);
     });
 
     Route::get('/user', function (\Illuminate\Http\Request $request) {

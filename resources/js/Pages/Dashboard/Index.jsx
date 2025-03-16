@@ -14,6 +14,7 @@ import api from '../../api/axios';
 import ShoppingList from './Partials/ShoppingList';
 import Analytic from './Partials/Analytic';
 import { useSelector } from 'react-redux';
+import AIChat from './Partials/AIChat';
 
 function Dashboard() {
   const drawerWidth = 240;
@@ -69,6 +70,14 @@ function Dashboard() {
         drawerWidth={drawerWidth}
       />
     )
+  } else if (filter?.filter === "AI Chat") {
+    return (
+      <AIChat
+        handleDrawerToggle={handleDrawerToggle} 
+        mobileOpen={mobileOpen} 
+        drawerWidth={drawerWidth}
+      />
+    );
   }
 
   return (
