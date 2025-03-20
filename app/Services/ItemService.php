@@ -76,28 +76,31 @@ class ItemService {
     }
     public static function create($request)
     {
+        $userId = Auth::id();
+
         $request->validate([
-            'user_id' => 'required|integer',
             'name' => 'required|string|max:255',
-            'quantity' => 'required|integer|min:1',
-            'acquire_date' => 'required|date|before:expiration_date',
-            'expiration_date' => 'required|date|after:acquire_date',
+            'category' => 'required|string',
+            'acquire_date.required' => 'Acquire date is required.',
+            'acquire_date' => 'nullable|date|before:expiration_date',
+            'expiration_date.required' => 'Expiration date is required.',
+            'expiration_date' => 'nullable|date|after:acquire_date',
         ], [
             'name.required' => 'The name field is required.',
-            'quantity.required' => 'Please specify the quantity.',
-            'quantity.integer' => 'Quantity must be a whole number.',
-            'acquire_date.required' => 'Acquire date is required.',
             'acquire_date.before' => 'Acquire date must be before the expiration date.',
-            'expiration_date.required' => 'Expiration date is required.',
             'expiration_date.after' => 'Expiration date must be after the acquire date.',
         ]);
 
+        $category = ItemCategory::where('uuid', $request['category'])->first();
+
         Item::create([
-            'user_id' => $request['user_id'],
+            'user_id' => $userId,
             'name' => $request['name'],
-            'priority' => $request['priority'],
-            'item_category_id' => $request['category'],
+            'notification' => $request['notification'] === true ? 1 : 0,
+            'priority' => $request['priority'] === true ? 1 : 0,
+            'item_category_id' => $category->id,
             'quantity' => $request['quantity'],
+            'unit' => $request['unit'],
             'acquire_date' => $request['acquire_date'],
             'expiration_date' => $request['expiration_date'],
             'status' => 1
@@ -235,6 +238,16 @@ class ItemService {
                 'details' => $e->getMessage()
             ], 500);
         }
+    }
+    public static function getAllCategoryList($request) {
+        $userId = Auth::id();
+        $categories = ItemCategory::select('uuid','name')
+                        ->whereRaw("member_id REGEXP ?", ["(^|\\|)".$userId."(\\||$)"])
+                        ->where('status', '!=', 9)
+                        ->get()
+                        ->makeHidden(['members', 'encrypted_id']);
+
+        return $categories;
     }
 }
 ?>

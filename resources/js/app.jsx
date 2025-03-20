@@ -4,6 +4,10 @@ import { Provider } from "react-redux";
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "./theme/theme";
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 
 const queryClient = new QueryClient();
 
@@ -21,7 +25,11 @@ createInertiaApp({
     createRoot(el).render(
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
-          <App {...props} />
+          <ThemeProvider theme={theme}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <App {...props} />
+            </LocalizationProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </Provider>
     );

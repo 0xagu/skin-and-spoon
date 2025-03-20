@@ -38,4 +38,8 @@ class ItemController extends Controller
     {
         return ItemService::addMemberToCategory($request);
     }
+    public function getAllCategoryList(Request $request)
+    {
+        return ItemService::getAllCategoryList($request);
+    }
 }
