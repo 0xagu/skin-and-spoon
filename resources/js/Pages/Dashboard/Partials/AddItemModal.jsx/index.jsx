@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Backdrop, Fade, Modal, Box, Avatar, Grid2, TextField, Button, InputLabel, Select, MenuItem, Typography, FormControlLabel, Checkbox } from '@mui/material';
 import * as Yup from 'yup';
 import { Formik, Form, Field } from 'formik';
 import LoadingButton from '@mui/lab/LoadingButton';
 import api from '../../../../api/axios';
-import { Close, Add, Edit, Remove } from "@mui/icons-material";
+import { Close, Add, Edit } from "@mui/icons-material";
 import { FormControl } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
-import QuantityInput from '../../../../ui-component/NumberInput';
 import { useQuery } from '@tanstack/react-query';
 
 const AddItemModal = ({ open, handleClose, data }) => {
     const style = {
-        position: 'absolute',
+        position: 'fixed',
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
@@ -24,9 +23,19 @@ const AddItemModal = ({ open, handleClose, data }) => {
         pt: 4,
         px: 4,
         pb: 6,
-        height: { xs: "auto", sm: "auto", md: "80vh" }, // Responsive height (80% of viewport for md and above)
-        maxHeight: "90vh", // Prevents the modal from being too tall
+        height: "70vh",
+        maxHeight: "100vh",
         overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        overflow: "hidden",
+    };
+
+    const scrollableContentStyle = {
+        flexGrow: 1,
+        overflowY: "auto",
+        paddingBottom: "16px",
         "&::-webkit-scrollbar": {
             width: "12px",
         },
@@ -37,6 +46,9 @@ const AddItemModal = ({ open, handleClose, data }) => {
             backgroundClip: "padding-box",
         },
     };
+
+    const [imagePreviews, setImagePreviews] = useState([]);
+    const [imageRealLocations, setImageRealLocations] = useState([]);
 
     const initialValues = {
         name: data?.name || '',
@@ -53,8 +65,14 @@ const AddItemModal = ({ open, handleClose, data }) => {
 
     const handleSubmit = async (values, { setSubmitting }) => {
         console.log("values:", values);
+
+        const formData = {
+            ...values,
+            images: imageRealLocations,
+        };
+
         try {
-            const response = await api.post('/list/create', values);
+            const response = await api.post('/list/create', formData);
             alert(response?.data?.message);
         } catch (error) {
             console.log("error")
@@ -63,31 +81,57 @@ const AddItemModal = ({ open, handleClose, data }) => {
         }
     }
 
-    const [formValues, setFormValues] = useState({
-        name:"",
-        category: "",
-        quantity: "",
-        unit: "",
-        priority:"",
-        notification:""
-    });
-
     const { data: categoryOption } = useQuery({
         staleTime: 'Infinity',
         queryKey: ['category'],
         queryFn: async () => await api.get(`/list/get-all-category`).then((res) => res.data)
     });
 
-    console.log("categoryOption:", categoryOption);
+    const handleFileUpload = async (files) => {
+        if (imagePreviews.length >= 5) {
+            alert("You can only upload up to 5 images.");
+            return;
+        }
 
-    const handleChange = (event) => {
-        console.log("event.target.name:", event.target.name)
-        setFormValues({
-            ...formValues,
-            [event.target.name]: event.target.value
-        });
+        const uploadedImages = [];
+        const previews = [];
+    
+        for (const file of files) {
+            const formData = new FormData();
+            
+            files.forEach((file) => {
+                formData.append("files[]", file);
+                previews.push(URL.createObjectURL(file));
+            });
+    
+            try {
+                const response = await api.post("/upload-files", formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+    
+                if (Array.isArray(response?.data?.files)) {
+                    response?.data?.files?.forEach(file => {
+                        uploadedImages.push(file?.real_location);
+                        previews.push(file?.file_url);
+                    });
+                }
+            } catch (error) {
+                console.error("Upload Error:", error);
+            }
+        }
+    
+        setImagePreviews((prev) => [...prev, ...previews]);
+        setImageRealLocations((prev) => [...prev, ...uploadedImages]);
     };
 
+    useEffect(() => {
+        if (!open) {
+            setImagePreviews([]);
+            setImageRealLocations([]);
+        }
+    }, [open]);
     return (
         <div>
             <Modal
@@ -118,18 +162,75 @@ const AddItemModal = ({ open, handleClose, data }) => {
                             <Form>
                                 {/* MODAL HEADER */}
                                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: '2rem', position: 'relative' }}>
-                                <Typography sx={{ fontWeight: 'bold', textAlign: 'center', flex: 1 }}>
-                                    {data ? "Edit your item" : "Create your item"}
-                                </Typography>
+                                    <Typography sx={{ fontWeight: 'bold', textAlign: 'center', flex: 1 }}>
+                                        {data ? "Edit your item" : "Create your item"}
+                                    </Typography>
                                     <Button onClick={handleClose} sx={{ position: 'absolute', right: 0 }}>
                                         <Close />
                                     </Button>
                                 </Box>
 
                                 {/* MODAL CONTENT */}
-                                <Box sx={{  mb: '2rem' }}>
+                                <Box sx={scrollableContentStyle}>
                                     {/* ADD ITEM FORM */}
                                     <Grid2 container spacing={2} sx={{ maxHeight: 400 }}>
+
+                                        {/* Image Upload Section */}
+                                        {/* First Box */}
+                                        <Grid2 item size={12}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                style={{ display: "none" }}
+                                                id="image-upload"
+                                                onChange={(event) => {
+                                                    const files = Array.from(event.target.files);
+                                                    if (files.length > 0) {
+                                                        handleFileUpload(files);
+                                                    }
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexWrap: "wrap",
+                                                    gap: "10px",
+                                                }}
+                                            >
+                                                {imagePreviews?.map((preview, index) => (
+                                                    <Box
+                                                        key={index}
+                                                        sx={{
+                                                            width: "100px",
+                                                            height: "100px",
+                                                            borderRadius: 2,
+                                                            overflow: "hidden",
+                                                            position: "relative",
+                                                        }}
+                                                    >
+                                                        <img src={preview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                    </Box>
+                                                ))}
+                                                <Box
+                                                    sx={{
+                                                        width: "100px",
+                                                        height: "100px",
+                                                        bgcolor: "grey.300",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        borderRadius: 2,
+                                                        cursor: "pointer",
+                                                    }}
+                                                    onClick={() => document.getElementById("image-upload").click()}
+                                                >
+                                                    <Add sx={{ color: "grey.600", fontSize: 40 }} />
+                                                </Box>
+                                            </Box>
+                                        </Grid2>
+                                        
+                                        {/* ITEM NAME INPUT */}
                                         <Grid2 item xs={12} size={12}>
                                             <Field name="name">
                                                 {({ field }) => (
@@ -275,7 +376,7 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                                     label="Notification"
                                                 />
                                             </Grid2>
-                                        </Grid2>
+                                        </Grid2>                            
                                     </Grid2>
                                 </Box>
                                 <Box>

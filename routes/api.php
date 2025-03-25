@@ -4,6 +4,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ShoppingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FileController;
 
 Route::group([
     'prefix' => 'auth',
@@ -53,5 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (\Illuminate\Http\Request $request) {
         return response()->json($request->user());
     });
+
+    Route::post('upload-files', [FileController::class, 'uploadFiles']);
 });
 ?>

@@ -4,7 +4,9 @@ namespace App\Services;
 use App\Models\{
     Item,
     ItemCategory,
-    User
+    User,
+    File,
+    ItemImage
 };
 use Illuminate\Support\Facades\{
     Hash,
@@ -85,6 +87,8 @@ class ItemService {
             'acquire_date' => 'nullable|date|before:expiration_date',
             'expiration_date.required' => 'Expiration date is required.',
             'expiration_date' => 'nullable|date|after:acquire_date',
+            'images' => 'nullable|array',
+            'images.*' => 'string',
         ], [
             'name.required' => 'The name field is required.',
             'acquire_date.before' => 'Acquire date must be before the expiration date.',
@@ -93,7 +97,7 @@ class ItemService {
 
         $category = ItemCategory::where('uuid', $request['category'])->first();
 
-        Item::create([
+        $item = Item::create([
             'user_id' => $userId,
             'name' => $request['name'],
             'notification' => $request['notification'] === true ? 1 : 0,
@@ -105,6 +109,25 @@ class ItemService {
             'expiration_date' => $request['expiration_date'],
             'status' => 1
         ]);
+
+
+        // store images 
+        if (!empty($request->images)) {
+            foreach ($request->images as $index => $imagePath) {
+                $file = File::where('real_location', $imagePath)->first();
+    
+                if ($file) {
+                    ItemImage::create([
+                        'item_id' => $item->id,
+                        'file_id' => $file->id,
+                        'real_location' => $file->real_location, 
+                        'order' => $index + 1,
+                        'status' => 1,
+                        'is_deleted' => 0,
+                    ]);
+                }
+            }
+        }
 
         return response()->json([
             'message' => 'Post created successfully!',
