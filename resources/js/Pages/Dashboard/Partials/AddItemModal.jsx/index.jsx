@@ -1,60 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { Backdrop, Fade, Modal, Box, Avatar, Grid2, TextField, Button, InputLabel, Select, MenuItem, Typography, FormControlLabel, Checkbox } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import {  Dialog, DialogTitle, DialogContent, DialogActions, Box, Grid2, TextField, Button, InputLabel, Select, MenuItem, Typography, FormControlLabel, Checkbox, Autocomplete} from '@mui/material';
 import * as Yup from 'yup';
 import { Formik, Form, Field } from 'formik';
 import LoadingButton from '@mui/lab/LoadingButton';
 import api from '../../../../api/axios';
-import { Close, Add, Edit } from "@mui/icons-material";
+import { Close, Add } from "@mui/icons-material";
 import { FormControl } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import SnackbarAlert from '../../../../components/SnackbarAlert';
 
 const AddItemModal = ({ open, handleClose, data }) => {
-    const style = {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: "90%",
-        maxWidth: { xs: 300, sm: 400, md: 500, lg: 600 },
-        bgcolor: 'background.paper',
-        borderRadius: "12px",
-        pt: 4,
-        px: 4,
-        pb: 6,
-        height: "70vh",
-        maxHeight: "100vh",
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        overflow: "hidden",
-    };
-
-    const scrollableContentStyle = {
-        flexGrow: 1,
-        overflowY: "auto",
-        paddingBottom: "16px",
-        "&::-webkit-scrollbar": {
-            width: "12px",
-        },
-        "&::-webkit-scrollbar-thumb": {
-            backgroundColor: (theme) => theme.palette.primary.main,
-            border: "4px solid transparent",
-            borderRadius: "8px",
-            backgroundClip: "padding-box",
-        },
-    };
-
+    const queryClient = useQueryClient();
     const [imagePreviews, setImagePreviews] = useState([]);
     const [imageRealLocations, setImageRealLocations] = useState([]);
+    const [showTopShadow, setShowTopShadow] = useState(false);
+    const [showBottomShadow, setShowBottomShadow] = useState(false);
+    const contentRef = useRef(null);
+
+    console.log("imagePreviews:", imagePreviews);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'info',
+    });
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!contentRef.current) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
+            setShowTopShadow(scrollTop > 0);
+            setShowBottomShadow(scrollTop + clientHeight < scrollHeight);
+        };
+
+        const contentEl = contentRef.current;
+        if (contentEl) {
+            contentEl.addEventListener("scroll", handleScroll);
+            handleScroll(); // Run once on mount
+        }
+
+        return () => contentEl?.removeEventListener("scroll", handleScroll);
+    }, [open]);
+
+    useEffect(() => {
+        if (open) {
+            if (data?.img_preview?.length) {
+                const existingPreviews = data.img_preview.map(img => img.temporary_url);
+                const existingRealLocations = data.img_preview.map(img => img.real_location);
+    
+                setImagePreviews(existingPreviews);
+                setImageRealLocations(existingRealLocations);
+            } else {
+                setImagePreviews([]);
+                setImageRealLocations([]);
+            }
+        }
+    }, [open, data]);
 
     const initialValues = {
+        id: data?.uuid || '',
         name: data?.name || '',
-        category: data?.item_category_id || '',
+        category: data?.item_category?.uuid || '',
+        acquire_date: data?.acquire_date || '',
         expiration_date: data?.expiration_date || '',
         quantity: data?.quantity || 0,
+        unit: data?.unit || '',
         priority: data?.priority || false,
         notification: data?.notification || false,
     };
@@ -63,23 +75,35 @@ const AddItemModal = ({ open, handleClose, data }) => {
         name: Yup.string().required('Name is required'),
     });
 
-    const handleSubmit = async (values, { setSubmitting }) => {
-        console.log("values:", values);
-
+    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+        setSubmitting(true);
+    
         const formData = {
             ...values,
             images: imageRealLocations,
         };
-
+    
         try {
-            const response = await api.post('/list/create', formData);
-            alert(response?.data?.message);
+            const response = await api.post('/list/create-or-edit-item', formData);
+            setSnackbar({
+                open: true,
+                message: response?.data?.message || "Item updated successfully!",
+                severity: "success",
+            });
+            queryClient.invalidateQueries(['items']);
+            resetForm();
+            handleClose();
         } catch (error) {
-            console.log("error")
+            setSnackbar({
+                open: true,
+                message: error?.response?.data?.message || "An error occurred!",
+                severity: "error",
+            });
         } finally {
-          setSubmitting(false);
+            setSubmitting(false);
         }
-    }
+    };
+    
 
     const { data: categoryOption } = useQuery({
         staleTime: 'Infinity',
@@ -89,20 +113,28 @@ const AddItemModal = ({ open, handleClose, data }) => {
 
     const handleFileUpload = async (files) => {
         if (imagePreviews.length >= 5) {
-            alert("You can only upload up to 5 images.");
+            setSnackbar({
+                open: true,
+                message: "You can only upload up to 5 images.",
+                severity: 'warning',
+            });
             return;
         }
-
+    
         const uploadedImages = [];
         const previews = [];
     
+        // Loop through each file
         for (const file of files) {
             const formData = new FormData();
             
-            files.forEach((file) => {
-                formData.append("files[]", file);
-                previews.push(URL.createObjectURL(file));
-            });
+            formData.append("files[]", file);  // Append only the current file
+            
+            const filePreviewUrl = URL.createObjectURL(file);
+
+            if (!imagePreviews.includes(filePreviewUrl)) {
+                previews.push(filePreviewUrl);
+            }
     
             try {
                 const response = await api.post("/upload-files", formData, {
@@ -114,16 +146,28 @@ const AddItemModal = ({ open, handleClose, data }) => {
                 if (Array.isArray(response?.data?.files)) {
                     response?.data?.files?.forEach(file => {
                         uploadedImages.push(file?.real_location);
-                        previews.push(file?.file_url);
                     });
                 }
             } catch (error) {
                 console.error("Upload Error:", error);
+                setSnackbar({
+                    open: true,
+                    message: "There was an error uploading the files.",
+                    severity: 'error',
+                });
             }
         }
     
+        // Update state with the new previews and real file locations
         setImagePreviews((prev) => [...prev, ...previews]);
         setImageRealLocations((prev) => [...prev, ...uploadedImages]);
+    };
+    
+    const handleCloseSnackbar = () => {
+        setSnackbar((prevState) => ({
+            ...prevState,
+            open: false, // Close snackbar
+        }));
     };
 
     useEffect(() => {
@@ -133,48 +177,75 @@ const AddItemModal = ({ open, handleClose, data }) => {
         }
     }, [open]);
     return (
-        <div>
-            <Modal
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-                closeAfterTransition
-                slots={{ backdrop: Backdrop }}
-                slotProps={{
-                backdrop: {
-                    timeout: 300,
-                },
-                }}
-            >
-                <Fade in={open}>
-                
-                <Box sx={style}>
-                    <Formik
-                        initialValues={initialValues}
-                        validationSchema={validationSchema}
-                        enableReinitialize
-                        onSubmit={(values, { setSubmitting }) => {
-                            handleSubmit(values, { setSubmitting });
+        <>
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+                {/* Dialog Header */}
+                <DialogTitle 
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
+                        fontWeight: "bold",
+                        boxShadow: showTopShadow ? "0px 4px 6px rgba(0, 0, 0, 0.1)" : "none",
+                        transition: "box-shadow 0.2s ease-in-out",
+                    }}
+                >
+                    <Typography 
+                    variant="h6" 
+                        fontWeight="bold" 
+                        sx={{ 
+                            flexGrow: 1, 
+                            textAlign: "center" 
                         }}
                     >
-                        {({ errors, touched, isSubmitting }) => (
-                            <Form>
-                                {/* MODAL HEADER */}
-                                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: '2rem', position: 'relative' }}>
-                                    <Typography sx={{ fontWeight: 'bold', textAlign: 'center', flex: 1 }}>
-                                        {data ? "Edit your item" : "Create your item"}
-                                    </Typography>
-                                    <Button onClick={handleClose} sx={{ position: 'absolute', right: 0 }}>
-                                        <Close />
-                                    </Button>
-                                </Box>
+                        {data ? "Edit Item" : "Create Item"}
+                    </Typography>
+                    <Button onClick={handleClose} sx={{
+                        position: "absolute",
+                        right: 8,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        minWidth: 0,
+                    }}>
+                        <Close />
+                    </Button>
+                </DialogTitle>
 
+                {/* Dialog Content */}
+                <Formik
+                    initialValues={initialValues}
+                    validationSchema={validationSchema}
+                    enableReinitialize
+                    onSubmit={handleSubmit}
+                >
+                    {({ errors, touched, isSubmitting }) => (
+                        <Form>
+                            <DialogContent 
+                                dividers={false}
+                                ref={contentRef}
+                                sx={{ 
+                                    maxHeight: "60vh", 
+                                    overflowY: "auto",
+                                    paddingBottom: '200px',
+                                    "&::-webkit-scrollbar": {
+                                        width: "12px",
+                                    },
+                                    "&::-webkit-scrollbar-thumb": {
+                                        backgroundColor: "#000", // Black scrollbar
+                                        border: "4px solid transparent",
+                                        borderRadius: "8px",
+                                        backgroundClip: "padding-box",
+                                    },
+                                    "&::-webkit-scrollbar-track": {
+                                        backgroundColor: "transparent",
+                                    },
+                                }}
+                            >
                                 {/* MODAL CONTENT */}
-                                <Box sx={scrollableContentStyle}>
+                                <Box display="flex" flexDirection="column" gap={2}>
                                     {/* ADD ITEM FORM */}
-                                    <Grid2 container spacing={2} sx={{ maxHeight: 400 }}>
-
+                                    <Grid2 container spacing={4} sx={{ maxHeight: 400 }}>
                                         {/* Image Upload Section */}
                                         {/* First Box */}
                                         <Grid2 item size={12}>
@@ -207,9 +278,21 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                                             borderRadius: 2,
                                                             overflow: "hidden",
                                                             position: "relative",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            backgroundColor: "#f0f0f0",
                                                         }}
                                                     >
-                                                        <img src={preview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                        <img 
+                                                            src={preview} 
+                                                            alt="Preview" 
+                                                            style={{ 
+                                                                width: "100%", 
+                                                                height: "100%", 
+                                                                objectFit: "cover"
+                                                            }} 
+                                                        />
                                                     </Box>
                                                 ))}
                                                 <Box
@@ -267,25 +350,20 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                                 )}
                                             </Field>
                                         </Grid2>
-                                       
+                                        
                                         {/* Quantity Dropdown */}
                                         <Grid2 item size={6}>
                                             <Field name="quantity">
                                                 {({ field, form }) => (
-                                                    <FormControl fullWidth>
-                                                        <InputLabel id="quantity-label">Quantity</InputLabel>
-                                                        <Select
-                                                            {...field}
-                                                            labelId="quantity-label"
-                                                            id="quantity"
-                                                            value={field.value}
-                                                            onChange={(event) => form.setFieldValue(field.name, event.target.value)}
-                                                        >
-                                                            <MenuItem value={1}>1</MenuItem>
-                                                            <MenuItem value={2}>2</MenuItem>
-                                                            <MenuItem value={3}>3</MenuItem>
-                                                        </Select>
-                                                    </FormControl>
+                                                    <TextField
+                                                        {...field}
+                                                        type="number"
+                                                        label="Quantity"
+                                                        variant="outlined"
+                                                        inputProps={{ min: 1 }}
+                                                        onChange={(event) => form.setFieldValue(field.name, Number(event.target.value))}
+                                                        fullWidth
+                                                    />
                                                 )}
                                             </Field>
                                         </Grid2>
@@ -294,20 +372,19 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                         <Grid2 item size={6}>
                                             <Field name="unit">
                                                 {({ field, form }) => (
-                                                    <FormControl fullWidth>
-                                                        <InputLabel id="unit-label">Unit</InputLabel>
-                                                        <Select
-                                                            {...field}
-                                                            labelId="unit-label"
-                                                            id="unit"
-                                                            value={field.value}
-                                                            onChange={(event) => form.setFieldValue(field.name, event.target.value)}
-                                                        >
-                                                            <MenuItem value="kg">kg</MenuItem>
-                                                            <MenuItem value="liters">liters</MenuItem>
-                                                            <MenuItem value="pieces">pieces</MenuItem>
-                                                        </Select>
-                                                    </FormControl>
+                                                    <Autocomplete
+                                                        freeSolo
+                                                        disablePortal
+                                                        selectOnFocus
+                                                        clearOnBlur
+                                                        handleHomeEndKeys
+                                                        value={field.value || "pieces"} 
+                                                        options={["kg", "liters", "pieces"]} // Predefined units
+                                                        onChange={(_, newValue) => form.setFieldValue(field.name, newValue)}
+                                                        renderInput={(params) => (
+                                                            <TextField {...params} label="Unit" variant="outlined" fullWidth />
+                                                        )}
+                                                    />
                                                 )}
                                             </Field>
                                         </Grid2>
@@ -345,9 +422,9 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                             </Field>
                                         </Grid2>
 
-                                     
-                                       {/* Important & Notification */}
-                                        <Grid2 container item xs={12} spacing={2} alignItems="center">
+                                        
+                                        {/* Important & Notification */}
+                                        <Grid2 container item xs={12} spacing={4} alignItems="center">
                                             {/* Important Checkbox */}
                                             <Grid2 item xs={6}>
                                                 <FormControlLabel
@@ -379,51 +456,45 @@ const AddItemModal = ({ open, handleClose, data }) => {
                                         </Grid2>                            
                                     </Grid2>
                                 </Box>
-                                <Box>
-                                    <Grid2 spacing={2} container xs={12} justifyContent="flex-end">
-                                        {data ? 
-                                            <LoadingButton
-                                                type="submit"
-                                                size="large"
-                                                variant="contained"
-                                                color="primary"
-                                                loading={isSubmitting}
-                                                disableElevation
-                                                startIcon={<Edit />}
-                                            >
-                                            DONE
-                                            </LoadingButton>
-                                        :  <LoadingButton
-                                                type="submit"
-                                                size="large"
-                                                variant="contained"
-                                                color="primary"
-                                                loading={isSubmitting}
-                                                disableElevation
-                                                startIcon={<Add />}
-                                                sx={{
-                                                    borderRadius: "12px",
-                                                    minWidth: "180px",
-                                                    padding: "10px 24px",
-                                                    fontSize: "16px",
-                                                    "&:hover": {
-                                                        backgroundColor: (theme) => theme.palette.secondary.main,
-                                                    },
-                                                }}
-                                            >
-                                            CREATE
-                                            </LoadingButton>
-                                        }
-                                    </Grid2>
-                                </Box>
-                            </Form>
-                        )}
-                    </Formik>
-                </Box>
-                </Fade>
-            </Modal>
-    </div>
-  );
+                            </DialogContent>
+
+                            {/* Dialog Actions (Footer) */}
+                            <DialogActions 
+                                sx={{
+                                    justifyContent: "flex-end",
+                                    pr: 2,
+                                    boxShadow: showBottomShadow ? "0px -4px 6px rgba(0, 0, 0, 0.1)" : "none",
+                                    transition: "box-shadow 0.2s ease-in-out",
+                                }}
+                            >
+                                {/* <Button onClick={handleClose} variant="outlined">Cancel</Button> */}
+                                <LoadingButton
+                                    type="submit"
+                                    size="large"
+                                    variant="contained"
+                                    color="primary"
+                                    loading={isSubmitting}
+                                    disableElevation
+                                    // startIcon={data ? <Edit /> : <Add />}
+                                    sx={{ borderRadius: "12px", minWidth: "150px" }}
+                                >
+                                    {data ? "Done" : "Create Item"}
+                                </LoadingButton>
+                            </DialogActions>
+                        </Form>
+                    )}
+                </Formik>
+            </Dialog>
+
+            {/* SnackbarAlert Usage */}
+            <SnackbarAlert
+                open={snackbar.open}
+                message={snackbar.message}
+                severity={snackbar.severity}
+                onClose={handleCloseSnackbar}
+            />
+        </>
+    );
 }
 
 export default AddItemModal;

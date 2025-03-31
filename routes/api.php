@@ -20,13 +20,20 @@ Route::get('/ping', fn() => response()->json(['message' => 'API is alive!']));
 // Public route 
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('list')->group(function () {
-        Route::post('create', [ItemController::class, 'create']);
+        Route::post('create-or-edit-item', [ItemController::class, 'createOrEdit']);
         Route::get('get', [ItemController::class, 'get']);
         Route::get('detail/{id}', [ItemController::class, 'getDetail']);
         Route::post('update-favourite', [ItemController::class, 'updateFavourite']);
+        Route::post('update-notification', [ItemController::class, 'updateNotification']);
         Route::get('get-list-date', [ItemController::class, 'getListDate']);
         Route::post('add-member', [ItemController::class, 'addMemberToCategory']);
         Route::get('get-all-category', [ItemController::class, 'getAllCategoryList']);
+        Route::get('get-items-by-day', [ItemController::class, 'getItemsByDay']);
+        Route::get('get-week-days-items-info', [ItemController::class, 'getWeekDaysItemsInfo']);
+        Route::get('get-used-up-counts-by-today', [ItemController::class, 'getUsedUpCountsByToday']);
+        Route::post('update-used-quantity', [ItemController::class, 'updateUsedQuantity']);
+        Route::post('delete-item', [ItemController::class, 'deleteItem']);
+        Route::put('/list/update/{uuid}', [ItemController::class, 'updateItem']);
     });
 
     Route::prefix('shopping')->group(function () {
@@ -48,7 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('chat')->group(function () {
-        Route::post('ask', [ChatController::class, 'askChatGpt']);
+        Route::post('ask', [ChatController::class, 'askAI']);
     });
 
     Route::get('/user', function (\Illuminate\Http\Request $request) {

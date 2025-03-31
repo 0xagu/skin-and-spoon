@@ -10,9 +10,9 @@ class ItemController extends Controller
     {
         return ItemService::get($request);
     }
-    public function create(Request $request)
+    public function createOrEdit(Request $request)
     {
-        return ItemService::create($request);
+        return ItemService::createOrEdit($request);
     }
     public function getDetail($id)
     {
@@ -21,6 +21,10 @@ class ItemController extends Controller
     public function updateFavourite(Request $request)
     {
         return ItemService::updateFavourite($request);
+    }
+    public function updateNotification(Request $request)
+    {
+        return ItemService::updateNotification($request);
     }
     public function getListDate(Request $request)
     {
@@ -41,5 +45,25 @@ class ItemController extends Controller
     public function getAllCategoryList(Request $request)
     {
         return ItemService::getAllCategoryList($request);
+    }
+    public function getItemsByDay(Request $request)
+    {
+        return ItemService::getItemsByDay($request);
+    }
+    public function getWeekDaysItemsInfo(Request $request)
+    {
+        return ItemService::getWeekDaysItemsInfo($request);
+    }
+    public function getUsedUpCountsByToday(Request $request)
+    {
+        return ItemService::getUsedUpCountsByToday($request);
+    }
+    public function updateUsedQuantity(Request $request)
+    {
+        return ItemService::updateUsedQuantity($request);
+    }
+    public function deleteItem(Request $request)
+    {
+        return ItemService::deleteItem($request);
     }
 }

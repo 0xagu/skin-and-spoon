@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Paper } from '@mui/material';
 import { useSelector } from 'react-redux';
-import Header from '../../../../components/Header';
-import Sidebar from '../../../../components/Sidebar';
-import Footer from '../../../../components/Footer';
-import api from '../../../../api/axios';
-
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
+import api from '../../api/axios';
 function AIChat({ handleDrawerToggle, mobileOpen, drawerWidth }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');

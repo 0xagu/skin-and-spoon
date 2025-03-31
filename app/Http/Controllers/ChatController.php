@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 
 class ChatController extends Controller
 {
-    public function askChatGpt(Request $request)
+    public function askAI(Request $request)
     {
-        return ChatService::askChatGpt($request);
+        return ChatService::askAI($request);
     }
 }

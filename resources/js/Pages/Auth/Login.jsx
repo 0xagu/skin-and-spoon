@@ -44,15 +44,16 @@ const Login = () => {
                   width: '25%'
                 }}
               >
-                <h1 style={{ zIndex: 10 }}>Track Your Essentials, Save Your Money.</h1>
+                <h1 style={{ zIndex: 10 }}>Track, Manage, and Never Waste.</h1>
                 <h4 style={{ zIndex: 10 }}>Efficiently manage your products and never miss an expiry with Skin & Spoon.</h4>
                 <Button 
                   variant="outlined" 
                   endIcon={<ArrowForwardIcon />}
                   style={{ zIndex: 10 }}
                   onClick={handleOpen}
+                  sx={{ borderRadius: "20px", px: 3, borderColor: "black", color: "black" }}
                 >
-                  Get Started
+                  See How It Works
                 </Button>
               </Stack>
             </Grid2>

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Box,Typography, Button, TextField, List, ListItem, IconButton, ListItemText } from '@mui/material';
-import Header from '../../../../components/Header';
-import Sidebar from '../../../../components/Sidebar';
-import Footer from '../../../../components/Footer';
+import Header from '../../components/Header';
+import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
+import authApi from '../../api/axios';
 import { ArrowUpward, ArrowDownward, Delete } from '@mui/icons-material';
-import authApi from '../../../../api/axios';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 function ShoppingList({ handleDrawerToggle, mobileOpen, setFilter, drawerWidth}) {

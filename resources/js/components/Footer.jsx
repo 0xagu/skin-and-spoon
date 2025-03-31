@@ -11,10 +11,9 @@ function Footer() {
         py: 2,
         position: 'fixed',
         bottom: 0,
-        backgroundColor: '#f5f5f5',
       }}
     >
-      <Typography variant="body2">&copy; {new Date().getFullYear()} My App. All rights reserved.</Typography>
+      <Typography variant="body2">&copy; {new Date().getFullYear()} Skin&Spoon. All rights reserved.</Typography>
     </Box>
   );
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 use App\Models\{
+    ItemCategory,
     ShoppingList,
     ShoppingItem
 };
@@ -148,38 +149,120 @@ class ShoppingService {
     public static function updateShoppingItemById($request)
     {
         $request->validate([
-            'id' => 'required|exists:shopping_items,uuid',
+            'list_id' => 'nullable|exists:shopping_lists,uuid',
+            'id' => 'nullable|exists:shopping_items,uuid',
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'priority' => 'required|integer|min:0',
-            'order' => 'required|integer|min:1',
+            'priority' => 'nullable|integer|min:0',
+            'order' => 'nullable|integer|min:1',
+            'category_id' => 'nullable|string|max:255',
         ]);
-
-        $shoppingItem = ShoppingItem::where('uuid', $request->id)->firstOrFail();
-        $shoppingListId = $shoppingItem->shopping_list_id;
-        $currentOrder = $shoppingItem->order;
-        $newOrder = $request->order;
-
-        if ($newOrder !== $currentOrder) {
-            $swapItem = ShoppingItem::where('shopping_list_id', $shoppingListId)
-                ->where('order', $newOrder)
-                ->first();
     
-            if ($swapItem) {
-                $swapItem->update(['order' => $currentOrder]);
+        if ($request->list_id) {
+            $shoppingList = ShoppingList::where('uuid', $request->list_id)->firstOrFail();
+        } else {
+            $category = ItemCategory::where('uuid', $request->category_id)->first();
+            // create new if add from item list
+            $shoppingList = ShoppingList::firstOrCreate(
+                ['name' => $category->name], 
+                ['uuid' => Str::uuid(),
+                'user_id' => Auth::id(),
+                'member_id' => Auth::id(),]
+            );
+        }
+    
+        // reorder item
+        if ($request->id) {
+            $shoppingItem = ShoppingItem::where('uuid', $request->id)
+                                ->where('status', '!=', 9)
+                                ->firstOrFail();
+    
+            $currentOrder = $shoppingItem->order;
+            $newOrder = $request->order ?? $currentOrder;
+    
+            if ($newOrder !== $currentOrder) {
+                $swapItem = ShoppingItem::where('shopping_list_id', $shoppingList->id)
+                    ->where('order', $newOrder)
+                    ->first();
+    
+                if ($swapItem) {
+                    $swapItem->update(['order' => $currentOrder]);
+                }
+    
+                $shoppingItem->order = $newOrder;
             }
     
-            $shoppingItem->order = $newOrder;
+            $shoppingItem->name = $request->name;
+            $shoppingItem->quantity = $request->quantity;
+            $shoppingItem->priority = $request->priority ?? $shoppingItem->priority;
+            $shoppingItem->save();
+    
+            return response()->json([
+                'error' => 0,
+                'message' => 'Shopping item updated successfully'
+            ]);
+        } else {
+            $existingItem = ShoppingItem::where('shopping_list_id', $shoppingList->id)
+                ->where('name', $request->name)
+                ->where('status', '!=', 9)
+                ->first();
+    
+            if ($existingItem) {
+                if ($existingItem->status == 1) {
+                    $existingItem->quantity += $request->quantity;
+                    $existingItem->save();
+        
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Item quantity updated successfully',
+                        'data' => $existingItem
+                    ]);
+                }
+                
+                // If item was previously bought (status 2), reactivate it
+                if ($existingItem->status == 2) {
+                    // Find how many similar items exist
+                    $similarCount = ShoppingItem::where('shopping_list_id', $shoppingList->id)
+                        ->where('name', 'LIKE', $request->name . '%')
+                        ->count();
+    
+                    $newItemName = $request->name . ' ' . ($similarCount + 1);
+    
+                    $shoppingItem = new ShoppingItem();
+                    $shoppingItem->uuid = Str::uuid();
+                    $shoppingItem->shopping_list_id = $shoppingList->id;
+                    $shoppingItem->name = $newItemName;
+                    $shoppingItem->quantity = $request->quantity;
+                    $shoppingItem->priority = $request->priority ?? 0;
+                    $shoppingItem->order = ShoppingItem::where('shopping_list_id', $shoppingList->id)->max('order') + 1;
+                    $shoppingItem->status = 1; // Default status is active
+    
+                    $shoppingItem->save();
+    
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Item added with a new name',
+                        'data' => $shoppingItem
+                    ], 201);
+                }
+            } else {
+                $shoppingItem = new ShoppingItem();
+                $shoppingItem->uuid = Str::uuid();
+                $shoppingItem->shopping_list_id = $shoppingList->id;
+                $shoppingItem->name = $request->name;
+                $shoppingItem->quantity = $request->quantity;
+                $shoppingItem->priority = $request->priority ?? 0;
+                $shoppingItem->order = ShoppingItem::where('shopping_list_id', $shoppingList->id)->max('order') + 1;
+                $shoppingItem->status = 1;
+
+                $shoppingItem->save();
+    
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Item added to shopping list',
+                ], 201);
+            }
         }
-
-        $shoppingItem->name = $request->name;
-        $shoppingItem->quantity = $request->quantity;
-
-        $shoppingItem->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Shopping item updated successfully'
-        ]);
     }
+    
 }

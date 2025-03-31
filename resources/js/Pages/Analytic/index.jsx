@@ -1,10 +1,9 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import Header from "../../../../components/Header";
-import Sidebar from "../../../../components/Sidebar";
-import Footer from "../../../../components/Footer";
 import Chart from "react-apexcharts";
-
+import Header from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import Footer from "../../components/Footer";
 function Analytic({ handleDrawerToggle, mobileOpen, setFilter, drawerWidth }) {
   // Function to generate heatmap data for a month
   const generateMonthData = (year, month, monthName) => {
