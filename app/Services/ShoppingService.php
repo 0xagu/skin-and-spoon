@@ -101,7 +101,8 @@ class ShoppingService {
         $maxOrder = ShoppingItem::where('shopping_list_id', $shoppingList->id)->max('order');
         $newOrder = ($maxOrder !== null) ? $maxOrder + 1 : 1;
 
-        $shoppingItem = ShoppingItem::create([
+        $userId = Auth::id();
+        ShoppingItem::create([
             'uuid' => (string) Str::uuid(),
             'id' => $shoppingList->id,
             'name' => $request->name,
@@ -109,6 +110,7 @@ class ShoppingService {
             'quantity' => $request->quantity ?? 1,
             'priority' => $request->priority ?? 0,
             'order' => $newOrder,
+            'created_by' => $userId,
             'status' => 1
         ]);
 

@@ -13,8 +13,15 @@ class ShoppingItem extends Model
         'shopping_list_id', 
         'name', 
         'quantity',
+        'unit',
         'priority',
         'order',
+        'latitude',
+        'longitude',
+        'shop_name',
+        'remarks',
+        'created_by',
+        'assign_to',
         'status'
     ];
 

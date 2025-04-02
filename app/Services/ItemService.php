@@ -9,10 +9,8 @@ use App\Models\{
     ItemImage
 };
 use Illuminate\Support\Facades\{
-    Hash,
     Auth,
-    Mail,
-    Validator
+    Cache
 };
 
 use Carbon\Carbon;
@@ -324,71 +322,82 @@ class ItemService {
         $categoryUuid = $filter['category'] ?? null;
         $searchTerm = $filter['searchTerm'] ?? null;
 
+        // Generate cache key based on the parameters
+        $cacheKey = 'items_' . $userId . '_' . $year . '_' . $week . '_' . $day . '_' . md5(json_encode($filter));
+
         $startOfWeek = Carbon::now()->setISODate($year, $week)->startOfWeek(); // Monday
         $selectedDate = clone $startOfWeek;
 
-        $dayIndex = [
-            'Mon' => 0, 'Tue' => 1, 'Wed' => 2,
-            'Thu' => 3, 'Fri' => 4, 'Sat' => 5, 'Sun' => 6
-        ];
+        // Try to get data from cache
+        $items = Cache::get($cacheKey);
 
-        if (isset($dayIndex[$day])) {
-            $selectedDate->addDays($dayIndex[$day]);
-        } else {
-            return response()->json(['error' => 'Invalid day'], 400);
-        }
+        if (!$items) {
+            $dayIndex = [
+                'Mon' => 0, 'Tue' => 1, 'Wed' => 2,
+                'Thu' => 3, 'Fri' => 4, 'Sat' => 5, 'Sun' => 6
+            ];
 
-        $today = now()->toDateString(); 
-        
-        $itemsQuery = Item::select(
-            'uuid', 
-            'name', 
-            'notification', 
-            'logo', 
-            'priority', 
-            'item_category_id',
-            'quantity',
-            'unit',
-            'used_quantity',
-            'used_up_date',
-            'acquire_date',
-            'expiration_date'
-        )
-            ->whereDate('expiration_date', $selectedDate->toDateString())
-            ->where(function ($q) use ($userId) {
-                $q->where('user_id', $userId)
-                ->orWhereHas('itemCategory', function ($q) use ($userId) {
-                    $q->whereRaw("member_id REGEXP ?", ["(^|\\|)$userId(\\||$)"]);
+            if (isset($dayIndex[$day])) {
+                $selectedDate->addDays($dayIndex[$day]);
+            } else {
+                return response()->json(['error' => 'Invalid day'], 400);
+            }
+
+            $today = now()->toDateString(); 
+            
+            $itemsQuery = Item::with('itemCategory')
+            ->select(
+                'uuid', 
+                'name', 
+                'notification', 
+                'logo', 
+                'priority', 
+                'item_category_id',
+                'quantity',
+                'unit',
+                'used_quantity',
+                'used_up_date',
+                'acquire_date',
+                'expiration_date'
+            )
+                ->whereDate('expiration_date', $selectedDate->toDateString())
+                ->where(function ($q) use ($userId) {
+                    $q->whereIn('user_id', [$userId])
+                    ->orWhereHas('itemCategory', function ($q) use ($userId) {
+                        $q->whereRaw("CONCAT('|', member_id, '|') LIKE ?", ['%' . $userId . '%']);
+                    });
+                })
+                ->where('status', '!=', 9);
+
+            // Apply category filter if provided
+            if (!empty($categoryUuid)) {
+                $catId = ItemCategory::where('uuid', $categoryUuid)->value('id');
+                $itemsQuery->where('item_category_id', $catId);
+            }
+
+            // Apply search filter if provided
+            if (!empty($searchTerm)) {
+                $itemsQuery->where('name', 'LIKE', "%{$searchTerm}%");
+            }
+
+            $items = $itemsQuery->orderBy('created_at', 'desc')->get()
+                ->map(function($item) use ($today) {
+                    // Calculate freshness (until expiration date)
+                    $freshness = Carbon::parse($today)->diffInDays($item->expiration_date, false);
+                    $item->freshness = $freshness;
+                    $item->left_over_quantity = max($item->quantity - $item->used_quantity, 0);
+
+                    // Calculate used percentage
+                    $item->used_percentage = $item->quantity > 0 
+                        ? round(($item->used_quantity / $item->quantity) * 100, 2) 
+                        : 0;
+
+                    return $item;
                 });
-            })
-            ->where('status', '!=', 9)
-            ->with('itemCategory');
 
-        // Apply category filter if provided
-        if (!empty($categoryUuid)) {
-            $catId = ItemCategory::where('uuid', $categoryUuid)->value('id');
-            $itemsQuery->where('item_category_id', $catId);
+            // Store the result in cache for 60 minutes
+            Cache::put($cacheKey, $items, 60);
         }
-
-        // Apply search filter if provided
-        if (!empty($searchTerm)) {
-            $itemsQuery->where('name', 'LIKE', "%{$searchTerm}%");
-        }
-
-        $items = $itemsQuery->orderBy('created_at', 'desc')->get()
-            ->map(function($item) use ($today) {
-                // Calculate freshness (until expiration date)
-                $freshness = Carbon::parse($today)->diffInDays($item->expiration_date, false);
-                $item->freshness = $freshness;
-                $item->left_over_quantity = max($item->quantity - $item->used_quantity, 0);
-
-                // Calculate used percentage
-                $item->used_percentage = $item->quantity > 0 
-                    ? round(($item->used_quantity / $item->quantity) * 100, 2) 
-                    : 0;
-
-                return $item;
-            });
 
         return response()->json([
             'date' => $selectedDate->toDateString(),
@@ -399,6 +408,14 @@ class ItemService {
     public static function getWeekDaysItemsInfo($request) {
         $year = $request->query('year', now()->year);
         $week = $request->query('week', now()->weekOfYear);
+        $userId = Auth::id();
+        
+        $cacheKey = "user_{$userId}_week_{$year}_{$week}_items_info";
+        $cachedData = \Cache::get($cacheKey);
+
+        if ($cachedData) {
+            return response()->json($cachedData);
+        }
 
         // Get the start of the requested week (Monday)
         $startOfWeek = Carbon::now()->setISODate($year, $week)->startOfWeek(Carbon::MONDAY);
@@ -408,10 +425,17 @@ class ItemService {
         $daysOfWeek = [];
         for ($i = 0; $i < 7; $i++) {
             $date = $startOfWeek->copy()->addDays($i)->format('Y-m-d');
-    
-            // Check if any item expires on this date
-            $hasExpiryItem = \DB::table('items')->whereDate('expiration_date', $date)->exists();
-    
+
+            $hasExpiryItem = Item::with('itemCategory')
+                ->whereDate('expiration_date', $date)
+                ->where(function ($q) use ($userId) {
+                    $q->whereIn('user_id', [$userId])
+                    ->orWhereHas('itemCategory', function ($q) use ($userId) {
+                        $q->whereRaw("CONCAT('|', member_id, '|') LIKE ?", ['%' . $userId . '%']);
+                    });
+                })
+                ->exists();
+ 
             $daysOfWeek[] = [
                 'day' => $startOfWeek->copy()->addDays($i)->format('D'),
                 'date' => $date,
@@ -419,10 +443,14 @@ class ItemService {
             ];
         }
 
-        return response()->json([
+            $dataToCache = [
             'startOfWeek' => $startOfWeek->format('Y-m-d'),
             'daysOfWeek' => $daysOfWeek,
-        ]);
+        ];
+
+        \Cache::put($cacheKey, $dataToCache, now()->addHours(24));
+
+    return response()->json($dataToCache);
     }
     public static function getUsedUpCountsByToday($request) {
         $today = now()->toDateString();

@@ -295,7 +295,6 @@ const CardByWeek = ({ year, week, day, handleViewDetail, category, searchTerm })
                       <IconButton 
                         sx={{ position: 'absolute', top: 10, right: 10, color: 'black', zIndex: 10  }} 
                         onClick={() => {
-                          console.log("close");
                           setOpenImgSwiper(null)
                           
                         }}

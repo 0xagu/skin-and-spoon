@@ -19,7 +19,6 @@ const AddItemModal = ({ open, handleClose, data }) => {
     const [showBottomShadow, setShowBottomShadow] = useState(false);
     const contentRef = useRef(null);
 
-    console.log("imagePreviews:", imagePreviews);
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
