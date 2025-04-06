@@ -1,5 +1,5 @@
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, Divider, useMediaQuery } from '@mui/material';
-import { EmojiEmotions as EmojiEmotionsIcon, Category as CategoryIcon, ShoppingCart as ShoppingCartIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Category as CategoryIcon, ShoppingCart as ShoppingCartIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { setFilter } from '../store/action';
 
@@ -9,8 +9,8 @@ function Sidebar({ mobileOpen, handleDrawerToggle }) {
   const drawerWidth = 90;
 
   const menuItems = [
-    { text: 'All', icon: <EmojiEmotionsIcon sx={{ color: 'black', fontSize: 24 }} /> },
-    { text: 'Category', icon: <CategoryIcon sx={{ color: 'black', fontSize: 24 }} /> },
+    { text: 'All', icon: <CategoryIcon sx={{ color: 'black', fontSize: 24 }} /> },
+    { text: 'Category', icon: <SearchIcon sx={{ color: 'black', fontSize: 24 }} /> },
     { text: 'Shopping List', icon: <ShoppingCartIcon sx={{ color: 'black', fontSize: 24 }} /> },
     { text: 'Help', icon: <HelpOutlineIcon sx={{ color: 'black', fontSize: 24 }} /> }
   ];

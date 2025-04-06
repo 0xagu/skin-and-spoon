@@ -144,7 +144,7 @@ function ItemByDate() {
     }}>
       {/* MAIN CONTENT */}
       <Typography variant="h4">
-        DASHBOARD
+        DASHBOARD (might be category)
       </Typography>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, px: 2 }}>
